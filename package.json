@@ -1,0 +1,16 @@
+{
+  "name": "customs-broker-portal",
+  "version": "1.0.0",
+  "description": "Australian Customs Broker Portal",
+  "scripts": {
+    "build": "echo 'Building with Docker - see individual service directories'",
+    "start": "echo 'Starting with Docker - see individual service directories'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Oakhampton1111/customsportal.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

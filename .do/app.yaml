@@ -1,11 +1,13 @@
 name: customs-broker-portal
 services:
 - name: backend
+  source_dir: /backend
   github:
     repo: Oakhampton1111/customsportal
     branch: master
     deploy_on_push: true
   dockerfile_path: backend/Dockerfile
+  build_command: echo "Using Docker build"
   instance_count: 1
   instance_size_slug: basic-xxs
   envs:
@@ -38,11 +40,13 @@ services:
   - path: /health
 
 - name: frontend
+  source_dir: /frontend
   github:
     repo: Oakhampton1111/customsportal
     branch: master
     deploy_on_push: true
   dockerfile_path: frontend/Dockerfile
+  build_command: echo "Using Docker build"
   instance_count: 1
   instance_size_slug: basic-xxs
   envs:
