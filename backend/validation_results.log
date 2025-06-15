@@ -1,0 +1,208 @@
+2025-05-26 22:07:29,082 - INFO - Starting comprehensive validation of specialized SQLAlchemy models
+2025-05-26 22:07:29,083 - INFO - ================================================================================
+2025-05-26 22:07:29,478 - ERROR - Failed to setup in-memory database: attempted relative import with no known parent package
+2025-05-26 22:07:29,478 - ERROR - Validation failed with error: attempted relative import with no known parent package
+2025-05-26 22:07:29,479 - ERROR - Traceback: Traceback (most recent call last):
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\validate_specialized_models.py", line 691, in main
+    engine, SessionLocal = setup_in_memory_database()
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\validate_specialized_models.py", line 65, in setup_in_memory_database
+    from database import Base
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\database.py", line 24, in <module>
+    from .config import get_settings, is_development
+ImportError: attempted relative import with no known parent package
+
+2025-05-27 08:52:21,670 - INFO - Starting comprehensive validation of specialized SQLAlchemy models
+2025-05-27 08:52:21,671 - INFO - ================================================================================
+2025-05-27 08:52:22,737 - INFO - Creating simplified validation with basic import test...
+2025-05-27 08:52:22,762 - INFO - In-memory SQLite database engine created successfully with mock models
+2025-05-27 08:52:22,762 - INFO - 
+============================================================
+2025-05-27 08:52:22,762 - INFO - TESTING MODEL INTEGRATION
+2025-05-27 08:52:22,762 - INFO - ============================================================
+2025-05-27 08:52:22,762 - INFO - [MODEL_INTEGRATION] Model availability: PASS
+2025-05-27 08:52:22,762 - INFO -   Details: All specialized models are available for testing
+2025-05-27 08:52:22,762 - INFO - [MODEL_INTEGRATION] Model class structure: PASS
+2025-05-27 08:52:22,762 - INFO -   Details: All models have proper SQLAlchemy structure
+2025-05-27 08:52:22,762 - INFO - [MODEL_INTEGRATION] Model relationships defined: PASS
+2025-05-27 08:52:22,762 - INFO -   Details: All expected relationships are properly defined
+2025-05-27 08:52:22,773 - INFO - [MODEL_INTEGRATION] Helper methods available: PASS
+2025-05-27 08:52:22,773 - INFO -   Details: All expected helper methods are available
+2025-05-27 08:52:22,773 - INFO - 
+============================================================
+2025-05-27 08:52:22,773 - INFO - TESTING RELATIONSHIP VALIDATION
+2025-05-27 08:52:22,773 - INFO - ============================================================
+2025-05-27 08:52:22,837 - INFO -   Details: Bidirectional relationship works correctly
+2025-05-27 08:52:22,847 - INFO -   Details: Bidirectional relationship works correctly
+2025-05-27 08:52:22,853 - INFO -   Details: Bidirectional relationship works correctly
+2025-05-27 08:52:22,873 - INFO - [RELATIONSHIP_VALIDATION] Cascade delete behavior: PASS
+2025-05-27 08:52:22,873 - INFO -   Details: Cascade deletes work correctly for all relationships
+2025-05-27 08:52:22,873 - INFO - 
+============================================================
+2025-05-27 08:52:22,877 - INFO - TESTING DATABASE SCHEMA
+2025-05-27 08:52:22,877 - INFO - ============================================================
+2025-05-27 08:52:22,878 - INFO - [DATABASE_SCHEMA] All tables created: PASS
+2025-05-27 08:52:22,878 - INFO -   Details: All specialized model tables created successfully
+2025-05-27 08:52:22,880 - INFO - [DATABASE_SCHEMA] TariffCode level constraint: FAIL
+2025-05-27 08:52:22,880 - INFO -   Details: Level constraint not enforced - invalid level accepted
+2025-05-27 08:52:22,882 - INFO - [DATABASE_SCHEMA] DumpingDuty positive rates constraint: FAIL
+2025-05-27 08:52:22,882 - INFO -   Details: Positive rates constraint not enforced
+2025-05-27 08:52:22,882 - INFO - 
+============================================================
+2025-05-27 08:52:22,882 - INFO - TESTING HELPER METHODS
+2025-05-27 08:52:22,882 - INFO - ============================================================
+2025-05-27 08:52:22,885 - INFO - [HELPER_METHODS] TariffCode property methods: PASS
+2025-05-27 08:52:22,885 - INFO -   Details: All TariffCode property methods work correctly
+2025-05-27 08:52:22,885 - INFO - [HELPER_METHODS] DumpingDuty helper methods: FAIL
+2025-05-27 08:52:22,885 - INFO -   Details: DumpingDuty methods failed: 
+2025-05-27 08:52:22,893 - INFO - [HELPER_METHODS] Tco helper methods: PASS
+2025-05-27 08:52:22,893 - INFO -   Details: All Tco helper methods work correctly
+2025-05-27 08:52:22,893 - INFO - [HELPER_METHODS] GstProvision helper methods: PASS
+2025-05-27 08:52:22,897 - INFO -   Details: All GstProvision helper methods work correctly
+2025-05-27 08:52:22,897 - INFO - 
+============================================================
+2025-05-27 08:52:22,897 - INFO - TESTING DATA INTEGRITY
+2025-05-27 08:52:22,897 - INFO - ============================================================
+2025-05-27 08:52:22,897 - INFO - [DATA_INTEGRITY] Foreign key constraints: FAIL
+2025-05-27 08:52:22,897 - INFO -   Details: Foreign key constraint not enforced
+2025-05-27 08:52:22,901 - INFO - [DATA_INTEGRITY] Default value assignments: PASS
+2025-05-27 08:52:22,901 - INFO -   Details: Default values properly assigned
+2025-05-27 08:52:22,901 - INFO - [DATA_INTEGRITY] Nullable field handling: PASS
+2025-05-27 08:52:22,901 - INFO -   Details: Nullable fields properly handled
+2025-05-27 08:52:22,901 - INFO - [DATA_INTEGRITY] Decimal precision handling: PASS
+2025-05-27 08:52:22,901 - INFO -   Details: Decimal precision properly maintained
+2025-05-27 08:52:22,901 - INFO - 
+================================================================================
+2025-05-27 08:52:22,901 - INFO - VALIDATION SUMMARY
+2025-05-27 08:52:22,910 - INFO - ================================================================================
+2025-05-27 08:52:22,910 - INFO - 
+MODEL INTEGRATION:
+2025-05-27 08:52:22,910 - INFO -   Passed: 4/4
+2025-05-27 08:52:22,910 - INFO -   Failed: 0/4
+2025-05-27 08:52:22,910 - INFO - 
+RELATIONSHIP VALIDATION:
+2025-05-27 08:52:22,910 - INFO -   Passed: 4/4
+2025-05-27 08:52:22,912 - INFO -   Failed: 0/4
+2025-05-27 08:52:22,912 - INFO - 
+DATABASE SCHEMA:
+2025-05-27 08:52:22,912 - INFO -   Passed: 1/3
+2025-05-27 08:52:22,912 - INFO -   Failed: 2/3
+2025-05-27 08:52:22,912 - INFO -   Failed tests:
+2025-05-27 08:52:22,912 - INFO -     - TariffCode level constraint: Level constraint not enforced - invalid level accepted
+2025-05-27 08:52:22,912 - INFO -     - DumpingDuty positive rates constraint: Positive rates constraint not enforced
+2025-05-27 08:52:22,912 - INFO - 
+HELPER METHODS:
+2025-05-27 08:52:22,915 - INFO -   Passed: 3/4
+2025-05-27 08:52:22,915 - INFO -   Failed: 1/4
+2025-05-27 08:52:22,915 - INFO -   Failed tests:
+2025-05-27 08:52:22,915 - INFO -     - DumpingDuty helper methods: DumpingDuty methods failed: 
+2025-05-27 08:52:22,915 - INFO - 
+DATA INTEGRITY:
+2025-05-27 08:52:22,915 - INFO -   Passed: 3/4
+2025-05-27 08:52:22,915 - INFO -   Failed: 1/4
+2025-05-27 08:52:22,915 - INFO -   Failed tests:
+2025-05-27 08:52:22,915 - INFO -     - Foreign key constraints: Foreign key constraint not enforced
+2025-05-27 08:52:22,918 - INFO - 
+OVERALL RESULTS:
+2025-05-27 08:52:22,918 - INFO -   Total Passed: 15
+2025-05-27 08:52:22,918 - INFO -   Total Failed: 4
+2025-05-27 08:52:22,918 - INFO -   Success Rate: 78.9%
+2025-05-27 08:52:22,918 - INFO - 
+Validation completed successfully
+2025-05-27 09:23:20,257 - INFO - Starting comprehensive validation of specialized SQLAlchemy models
+2025-05-27 09:23:20,265 - INFO - ================================================================================
+2025-05-27 09:23:21,115 - INFO - Creating simplified validation with basic import test...
+2025-05-27 09:23:21,147 - INFO - In-memory SQLite database engine created successfully with mock models
+2025-05-27 09:23:21,147 - INFO - 
+============================================================
+2025-05-27 09:23:21,147 - INFO - TESTING MODEL INTEGRATION
+2025-05-27 09:23:21,147 - INFO - ============================================================
+2025-05-27 09:23:21,147 - INFO - [MODEL_INTEGRATION] Model availability: PASS
+2025-05-27 09:23:21,147 - INFO -   Details: All specialized models are available for testing
+2025-05-27 09:23:21,147 - INFO - [MODEL_INTEGRATION] Model class structure: PASS
+2025-05-27 09:23:21,147 - INFO -   Details: All models have proper SQLAlchemy structure
+2025-05-27 09:23:21,147 - INFO - [MODEL_INTEGRATION] Model relationships defined: PASS
+2025-05-27 09:23:21,147 - INFO -   Details: All expected relationships are properly defined
+2025-05-27 09:23:21,160 - INFO - [MODEL_INTEGRATION] Helper methods available: PASS
+2025-05-27 09:23:21,160 - INFO -   Details: All expected helper methods are available
+2025-05-27 09:23:21,160 - INFO - 
+============================================================
+2025-05-27 09:23:21,162 - INFO - TESTING RELATIONSHIP VALIDATION
+2025-05-27 09:23:21,162 - INFO - ============================================================
+2025-05-27 09:23:21,196 - INFO -   Details: Bidirectional relationship works correctly
+2025-05-27 09:23:21,204 - INFO -   Details: Bidirectional relationship works correctly
+2025-05-27 09:23:21,209 - INFO -   Details: Bidirectional relationship works correctly
+2025-05-27 09:23:21,220 - INFO - [RELATIONSHIP_VALIDATION] Cascade delete behavior: PASS
+2025-05-27 09:23:21,220 - INFO -   Details: Cascade deletes work correctly for all relationships
+2025-05-27 09:23:21,220 - INFO - 
+============================================================
+2025-05-27 09:23:21,220 - INFO - TESTING DATABASE SCHEMA
+2025-05-27 09:23:21,220 - INFO - ============================================================
+2025-05-27 09:23:21,220 - INFO - [DATABASE_SCHEMA] All tables created: PASS
+2025-05-27 09:23:21,220 - INFO -   Details: All specialized model tables created successfully
+2025-05-27 09:23:21,220 - INFO - [DATABASE_SCHEMA] TariffCode level constraint: FAIL
+2025-05-27 09:23:21,220 - INFO -   Details: Level constraint not enforced - invalid level accepted
+2025-05-27 09:23:21,220 - INFO - [DATABASE_SCHEMA] DumpingDuty positive rates constraint: FAIL
+2025-05-27 09:23:21,220 - INFO -   Details: Positive rates constraint not enforced
+2025-05-27 09:23:21,220 - INFO - 
+============================================================
+2025-05-27 09:23:21,220 - INFO - TESTING HELPER METHODS
+2025-05-27 09:23:21,220 - INFO - ============================================================
+2025-05-27 09:23:21,229 - INFO - [HELPER_METHODS] TariffCode property methods: PASS
+2025-05-27 09:23:21,229 - INFO -   Details: All TariffCode property methods work correctly
+2025-05-27 09:23:21,229 - INFO - [HELPER_METHODS] DumpingDuty helper methods: FAIL
+2025-05-27 09:23:21,229 - INFO -   Details: DumpingDuty methods failed: 
+2025-05-27 09:23:21,229 - INFO - [HELPER_METHODS] Tco helper methods: PASS
+2025-05-27 09:23:21,229 - INFO -   Details: All Tco helper methods work correctly
+2025-05-27 09:23:21,229 - INFO - [HELPER_METHODS] GstProvision helper methods: PASS
+2025-05-27 09:23:21,229 - INFO -   Details: All GstProvision helper methods work correctly
+2025-05-27 09:23:21,229 - INFO - 
+============================================================
+2025-05-27 09:23:21,229 - INFO - TESTING DATA INTEGRITY
+2025-05-27 09:23:21,229 - INFO - ============================================================
+2025-05-27 09:23:21,237 - INFO - [DATA_INTEGRITY] Foreign key constraints: FAIL
+2025-05-27 09:23:21,237 - INFO -   Details: Foreign key constraint not enforced
+2025-05-27 09:23:21,242 - INFO - [DATA_INTEGRITY] Default value assignments: PASS
+2025-05-27 09:23:21,242 - INFO -   Details: Default values properly assigned
+2025-05-27 09:23:21,242 - INFO - [DATA_INTEGRITY] Nullable field handling: PASS
+2025-05-27 09:23:21,242 - INFO -   Details: Nullable fields properly handled
+2025-05-27 09:23:21,246 - INFO - [DATA_INTEGRITY] Decimal precision handling: PASS
+2025-05-27 09:23:21,246 - INFO -   Details: Decimal precision properly maintained
+2025-05-27 09:23:21,246 - INFO - 
+================================================================================
+2025-05-27 09:23:21,246 - INFO - VALIDATION SUMMARY
+2025-05-27 09:23:21,248 - INFO - ================================================================================
+2025-05-27 09:23:21,248 - INFO - 
+MODEL INTEGRATION:
+2025-05-27 09:23:21,248 - INFO -   Passed: 4/4
+2025-05-27 09:23:21,248 - INFO -   Failed: 0/4
+2025-05-27 09:23:21,248 - INFO - 
+RELATIONSHIP VALIDATION:
+2025-05-27 09:23:21,248 - INFO -   Passed: 4/4
+2025-05-27 09:23:21,248 - INFO -   Failed: 0/4
+2025-05-27 09:23:21,248 - INFO - 
+DATABASE SCHEMA:
+2025-05-27 09:23:21,248 - INFO -   Passed: 1/3
+2025-05-27 09:23:21,248 - INFO -   Failed: 2/3
+2025-05-27 09:23:21,248 - INFO -   Failed tests:
+2025-05-27 09:23:21,248 - INFO -     - TariffCode level constraint: Level constraint not enforced - invalid level accepted
+2025-05-27 09:23:21,248 - INFO -     - DumpingDuty positive rates constraint: Positive rates constraint not enforced
+2025-05-27 09:23:21,248 - INFO - 
+HELPER METHODS:
+2025-05-27 09:23:21,248 - INFO -   Passed: 3/4
+2025-05-27 09:23:21,248 - INFO -   Failed: 1/4
+2025-05-27 09:23:21,248 - INFO -   Failed tests:
+2025-05-27 09:23:21,248 - INFO -     - DumpingDuty helper methods: DumpingDuty methods failed: 
+2025-05-27 09:23:21,248 - INFO - 
+DATA INTEGRITY:
+2025-05-27 09:23:21,254 - INFO -   Passed: 3/4
+2025-05-27 09:23:21,254 - INFO -   Failed: 1/4
+2025-05-27 09:23:21,254 - INFO -   Failed tests:
+2025-05-27 09:23:21,254 - INFO -     - Foreign key constraints: Foreign key constraint not enforced
+2025-05-27 09:23:21,254 - INFO - 
+OVERALL RESULTS:
+2025-05-27 09:23:21,254 - INFO -   Total Passed: 15
+2025-05-27 09:23:21,256 - INFO -   Total Failed: 4
+2025-05-27 09:23:21,256 - INFO -   Success Rate: 78.9%
+2025-05-27 09:23:21,256 - INFO - 
+Validation completed successfully

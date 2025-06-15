@@ -1,0 +1,199 @@
+2025-05-26 22:07:11,943 - INFO - Starting comprehensive validation of specialized SQLAlchemy models
+2025-05-26 22:07:11,943 - INFO - ================================================================================
+2025-05-26 22:07:12,404 - ERROR - Failed to setup in-memory database: attempted relative import with no known parent package
+2025-05-26 22:07:12,404 - ERROR - Validation failed with error: attempted relative import with no known parent package
+2025-05-26 22:07:12,406 - ERROR - Traceback: Traceback (most recent call last):
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\validate_specialized_models.py", line 691, in main
+    engine, SessionLocal = setup_in_memory_database()
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\validate_specialized_models.py", line 65, in setup_in_memory_database
+    from database import Base
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\database.py", line 24, in <module>
+    from .config import get_settings, is_development
+ImportError: attempted relative import with no known parent package
+
+2025-05-26 22:11:08,199 - INFO - Starting comprehensive validation of specialized SQLAlchemy models
+2025-05-26 22:11:08,200 - INFO - ================================================================================
+2025-05-26 22:11:08,712 - INFO - Direct model import failed, attempting manual import with patching...
+2025-05-26 22:11:08,713 - ERROR - Failed to setup in-memory database: attempted relative import beyond top-level package
+2025-05-26 22:11:08,714 - ERROR - Validation failed with error: attempted relative import beyond top-level package
+2025-05-26 22:11:08,715 - ERROR - Traceback: Traceback (most recent call last):
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\validate_specialized_models.py", line 79, in setup_in_memory_database
+    from models import TariffCode, DumpingDuty, Tco, GstProvision
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\models\__init__.py", line 8, in <module>
+    from .tariff import TariffCode
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\models\tariff.py", line 17, in <module>
+    from ..database import Base
+ImportError: attempted relative import beyond top-level package
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\validate_specialized_models.py", line 724, in main
+    engine, SessionLocal, Base = setup_in_memory_database()
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\validate_specialized_models.py", line 99, in setup_in_memory_database
+    from models import TariffCode, DumpingDuty, Tco, GstProvision
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\models\__init__.py", line 8, in <module>
+    from .tariff import TariffCode
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\models\tariff.py", line 17, in <module>
+    from ..database import Base
+ImportError: attempted relative import beyond top-level package
+
+2025-05-26 22:11:49,054 - INFO - Starting comprehensive validation of specialized SQLAlchemy models
+2025-05-26 22:11:49,055 - INFO - ================================================================================
+2025-05-26 22:11:49,558 - ERROR - Failed to setup in-memory database: attempted relative import with no known parent package
+2025-05-26 22:11:49,558 - ERROR - Validation failed with error: attempted relative import with no known parent package
+2025-05-26 22:11:49,560 - ERROR - Traceback: Traceback (most recent call last):
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\validate_specialized_models.py", line 727, in main
+    engine, SessionLocal, Base = setup_in_memory_database()
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\validate_specialized_models.py", line 101, in setup_in_memory_database
+    import database
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\database.py", line 24, in <module>
+    from .config import get_settings, is_development
+ImportError: attempted relative import with no known parent package
+
+2025-05-26 22:12:15,329 - INFO - Starting comprehensive validation of specialized SQLAlchemy models
+2025-05-26 22:12:15,329 - INFO - ================================================================================
+2025-05-26 22:12:15,859 - INFO - Using standalone Base for testing
+2025-05-26 22:12:15,864 - ERROR - Failed to setup in-memory database: attempted relative import beyond top-level package
+2025-05-26 22:12:15,864 - ERROR - Validation failed with error: attempted relative import beyond top-level package
+2025-05-26 22:12:15,866 - ERROR - Traceback: Traceback (most recent call last):
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\validate_specialized_models.py", line 747, in main
+    engine, SessionLocal, Base = setup_in_memory_database()
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\validate_specialized_models.py", line 125, in setup_in_memory_database
+    from models import TariffCode, DumpingDuty, Tco, GstProvision
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\models\__init__.py", line 8, in <module>
+    from .tariff import TariffCode
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\models\tariff.py", line 17, in <module>
+    from ..database import Base
+ImportError: attempted relative import beyond top-level package
+
+2025-05-26 22:12:51,959 - INFO - Starting comprehensive validation of specialized SQLAlchemy models
+2025-05-26 22:12:51,959 - INFO - ================================================================================
+2025-05-26 22:12:52,343 - ERROR - Failed to import models even with mocking: attempted relative import beyond top-level package
+2025-05-26 22:12:52,344 - INFO - Attempting manual model loading...
+2025-05-26 22:12:52,344 - WARNING - Failed to load tariff.py: attempted relative import beyond top-level package
+2025-05-26 22:12:52,346 - WARNING - Failed to load dumping.py: cannot import name 'Decimal' from 'sqlalchemy' (C:\Users\Seth R\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\__init__.py)
+2025-05-26 22:12:52,350 - WARNING - Failed to load tco.py: attempted relative import beyond top-level package
+2025-05-26 22:12:52,354 - WARNING - Failed to load gst.py: cannot import name 'Decimal' from 'sqlalchemy' (C:\Users\Seth R\AppData\Roaming\Python\Python312\site-packages\sqlalchemy\__init__.py)
+2025-05-26 22:12:52,354 - ERROR - Failed to setup in-memory database: Failed to load all required models
+2025-05-26 22:12:52,355 - ERROR - Validation failed with error: Failed to load all required models
+2025-05-26 22:12:52,356 - ERROR - Traceback: Traceback (most recent call last):
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\validate_specialized_models.py", line 119, in setup_in_memory_database
+    from models import TariffCode, DumpingDuty, Tco, GstProvision
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\models\__init__.py", line 8, in <module>
+    from .tariff import TariffCode
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\models\tariff.py", line 17, in <module>
+    from ..database import Base
+ImportError: attempted relative import beyond top-level package
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\validate_specialized_models.py", line 784, in main
+    engine, SessionLocal, Base = setup_in_memory_database()
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seth R\Desktop\Customs Broker Portal\backend\validate_specialized_models.py", line 162, in setup_in_memory_database
+    raise ImportError("Failed to load all required models")
+ImportError: Failed to load all required models
+
+2025-05-27 08:56:11,450 - INFO - Starting comprehensive validation of specialized SQLAlchemy models
+2025-05-27 08:56:11,458 - INFO - ================================================================================
+2025-05-27 08:56:11,967 - INFO - Creating simplified validation with basic import test...
+2025-05-27 08:56:11,985 - INFO - In-memory SQLite database engine created successfully with mock models
+2025-05-27 08:56:11,985 - INFO - 
+============================================================
+2025-05-27 08:56:11,985 - INFO - TESTING MODEL INTEGRATION
+2025-05-27 08:56:11,985 - INFO - ============================================================
+2025-05-27 08:56:11,985 - INFO - [MODEL_INTEGRATION] Model availability: PASS
+2025-05-27 08:56:11,985 - INFO -   Details: All specialized models are available for testing
+2025-05-27 08:56:11,985 - INFO - [MODEL_INTEGRATION] Model class structure: PASS
+2025-05-27 08:56:11,985 - INFO -   Details: All models have proper SQLAlchemy structure
+2025-05-27 08:56:11,993 - INFO - [MODEL_INTEGRATION] Model relationships defined: PASS
+2025-05-27 08:56:11,994 - INFO -   Details: All expected relationships are properly defined
+2025-05-27 08:56:11,994 - INFO - [MODEL_INTEGRATION] Helper methods available: PASS
+2025-05-27 08:56:11,994 - INFO -   Details: All expected helper methods are available
+2025-05-27 08:56:11,994 - INFO - 
+============================================================
+2025-05-27 08:56:12,001 - INFO - TESTING RELATIONSHIP VALIDATION
+2025-05-27 08:56:12,001 - INFO - ============================================================
+2025-05-27 08:56:12,018 - INFO -   Details: Bidirectional relationship works correctly
+2025-05-27 08:56:12,018 - INFO -   Details: Bidirectional relationship works correctly
+2025-05-27 08:56:12,034 - INFO -   Details: Bidirectional relationship works correctly
+2025-05-27 08:56:12,042 - INFO - [RELATIONSHIP_VALIDATION] Cascade delete behavior: PASS
+2025-05-27 08:56:12,042 - INFO -   Details: Cascade deletes work correctly for all relationships
+2025-05-27 08:56:12,042 - INFO - 
+============================================================
+2025-05-27 08:56:12,042 - INFO - TESTING DATABASE SCHEMA
+2025-05-27 08:56:12,042 - INFO - ============================================================
+2025-05-27 08:56:12,050 - INFO - [DATABASE_SCHEMA] All tables created: PASS
+2025-05-27 08:56:12,050 - INFO -   Details: All specialized model tables created successfully
+2025-05-27 08:56:12,050 - INFO - [DATABASE_SCHEMA] TariffCode level constraint: FAIL
+2025-05-27 08:56:12,050 - INFO -   Details: Level constraint not enforced - invalid level accepted
+2025-05-27 08:56:12,050 - INFO - [DATABASE_SCHEMA] DumpingDuty positive rates constraint: FAIL
+2025-05-27 08:56:12,050 - INFO -   Details: Positive rates constraint not enforced
+2025-05-27 08:56:12,050 - INFO - 
+============================================================
+2025-05-27 08:56:12,050 - INFO - TESTING HELPER METHODS
+2025-05-27 08:56:12,050 - INFO - ============================================================
+2025-05-27 08:56:12,050 - INFO - [HELPER_METHODS] TariffCode property methods: PASS
+2025-05-27 08:56:12,050 - INFO -   Details: All TariffCode property methods work correctly
+2025-05-27 08:56:12,050 - INFO - [HELPER_METHODS] DumpingDuty helper methods: FAIL
+2025-05-27 08:56:12,050 - INFO -   Details: DumpingDuty methods failed: 
+2025-05-27 08:56:12,060 - INFO - [HELPER_METHODS] Tco helper methods: PASS
+2025-05-27 08:56:12,060 - INFO -   Details: All Tco helper methods work correctly
+2025-05-27 08:56:12,060 - INFO - [HELPER_METHODS] GstProvision helper methods: PASS
+2025-05-27 08:56:12,060 - INFO -   Details: All GstProvision helper methods work correctly
+2025-05-27 08:56:12,060 - INFO - 
+============================================================
+2025-05-27 08:56:12,067 - INFO - TESTING DATA INTEGRITY
+2025-05-27 08:56:12,068 - INFO - ============================================================
+2025-05-27 08:56:12,068 - INFO - [DATA_INTEGRITY] Foreign key constraints: FAIL
+2025-05-27 08:56:12,068 - INFO -   Details: Foreign key constraint not enforced
+2025-05-27 08:56:12,070 - INFO - [DATA_INTEGRITY] Default value assignments: PASS
+2025-05-27 08:56:12,070 - INFO -   Details: Default values properly assigned
+2025-05-27 08:56:12,070 - INFO - [DATA_INTEGRITY] Nullable field handling: PASS
+2025-05-27 08:56:12,070 - INFO -   Details: Nullable fields properly handled
+2025-05-27 08:56:12,076 - INFO - [DATA_INTEGRITY] Decimal precision handling: PASS
+2025-05-27 08:56:12,076 - INFO -   Details: Decimal precision properly maintained
+2025-05-27 08:56:12,076 - INFO - 
+================================================================================
+2025-05-27 08:56:12,076 - INFO - VALIDATION SUMMARY
+2025-05-27 08:56:12,076 - INFO - ================================================================================
+2025-05-27 08:56:12,076 - INFO - 
+MODEL INTEGRATION:
+2025-05-27 08:56:12,076 - INFO -   Passed: 4/4
+2025-05-27 08:56:12,076 - INFO -   Failed: 0/4
+2025-05-27 08:56:12,076 - INFO - 
+RELATIONSHIP VALIDATION:
+2025-05-27 08:56:12,076 - INFO -   Passed: 4/4
+2025-05-27 08:56:12,076 - INFO -   Failed: 0/4
+2025-05-27 08:56:12,076 - INFO - 
+DATABASE SCHEMA:
+2025-05-27 08:56:12,076 - INFO -   Passed: 1/3
+2025-05-27 08:56:12,076 - INFO -   Failed: 2/3
+2025-05-27 08:56:12,076 - INFO -   Failed tests:
+2025-05-27 08:56:12,076 - INFO -     - TariffCode level constraint: Level constraint not enforced - invalid level accepted
+2025-05-27 08:56:12,076 - INFO -     - DumpingDuty positive rates constraint: Positive rates constraint not enforced
+2025-05-27 08:56:12,084 - INFO - 
+HELPER METHODS:
+2025-05-27 08:56:12,084 - INFO -   Passed: 3/4
+2025-05-27 08:56:12,084 - INFO -   Failed: 1/4
+2025-05-27 08:56:12,084 - INFO -   Failed tests:
+2025-05-27 08:56:12,084 - INFO -     - DumpingDuty helper methods: DumpingDuty methods failed: 
+2025-05-27 08:56:12,084 - INFO - 
+DATA INTEGRITY:
+2025-05-27 08:56:12,084 - INFO -   Passed: 3/4
+2025-05-27 08:56:12,084 - INFO -   Failed: 1/4
+2025-05-27 08:56:12,086 - INFO -   Failed tests:
+2025-05-27 08:56:12,086 - INFO -     - Foreign key constraints: Foreign key constraint not enforced
+2025-05-27 08:56:12,086 - INFO - 
+OVERALL RESULTS:
+2025-05-27 08:56:12,086 - INFO -   Total Passed: 15
+2025-05-27 08:56:12,086 - INFO -   Total Failed: 4
+2025-05-27 08:56:12,086 - INFO -   Success Rate: 78.9%
+2025-05-27 08:56:12,086 - INFO - 
+Validation completed successfully

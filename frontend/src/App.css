@@ -1,0 +1,21 @@
+/* App-specific styles for Customs Broker Portal */
+#root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure the app layout takes full height */
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}

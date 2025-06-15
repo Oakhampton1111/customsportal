@@ -1,0 +1,8 @@
+2025-05-26 20:43:51,845 - customs_scraper - INFO - Scrapers package initialized successfully
+2025-05-26 20:43:51,847 - customs_scraper - INFO - Environment: development
+2025-05-26 20:43:51,849 - customs_scraper - INFO - Database: localhost:5432
+2025-05-26 20:44:01,912 - customs_scraper - INFO - Scrapers package initialized successfully
+2025-05-26 20:44:01,915 - customs_scraper - INFO - Environment: development
+2025-05-26 20:44:01,916 - customs_scraper - INFO - Database: localhost:5432
+2025-05-26 20:44:01,919 - customs_scraper.ABF_Working_Tariff - INFO - Initialized ABF_Working_Tariff scraper
+2025-05-26 20:44:01,922 - customs_scraper.ABF_Working_Tariff - INFO - ABF Working Tariff scraper initialized
