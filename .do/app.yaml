@@ -4,7 +4,8 @@ services:
   git:
     repo_clone_url: https://github.com/Oakhampton1111/customsportal.git
     branch: master
-  dockerfile_path: backend/Dockerfile
+  source_dir: backend
+  dockerfile_path: Dockerfile
   instance_count: 1
   instance_size_slug: basic-xxs
   envs:
@@ -32,7 +33,8 @@ services:
   git:
     repo_clone_url: https://github.com/Oakhampton1111/customsportal.git
     branch: master
-  dockerfile_path: frontend/Dockerfile
+  source_dir: frontend
+  dockerfile_path: Dockerfile
   instance_count: 1
   instance_size_slug: basic-xxs
   envs:
