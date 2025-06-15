@@ -18,9 +18,9 @@ RUN apt-get update \
         ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Add CA certificate and update system trust store
-COPY certs/ca.crt /usr/local/share/ca-certificates/ca.crt
-RUN update-ca-certificates
+# CA certificate handling removed - not required for basic functionality
+# COPY certs/ca.crt /usr/local/share/ca-certificates/ca.crt
+# RUN update-ca-certificates
 
 # Install Python dependencies
 COPY requirements.txt .
