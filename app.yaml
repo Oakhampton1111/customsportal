@@ -42,7 +42,7 @@ services:
     value: https://customs-broker-portal.ondigitalocean.app
   - key: VITE_ENVIRONMENT
     value: production
-  http_port: 8080
+  http_port: 80
   routes:
   - path: /
 
