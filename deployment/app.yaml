@@ -5,7 +5,7 @@ services:
   dockerfile_path: backend/Dockerfile
   github:
     repo: Oakhampton1111/customsportal
-    branch: main
+    branch: master
   instance_count: 1
   instance_size_slug: basic-xxs
   envs:
@@ -42,7 +42,7 @@ services:
   dockerfile_path: frontend/Dockerfile
   github:
     repo: Oakhampton1111/customsportal
-    branch: main
+    branch: master
   instance_count: 1
   instance_size_slug: basic-xxs
   envs:
