@@ -1,6 +1,0 @@
-# Root requirements file for Digital Ocean App Platform detection
-# The actual requirements are in backend/requirements.txt
-
-# This file helps Digital Ocean detect this as a Python project
-fastapi>=0.104.1
-uvicorn>=0.24.0
