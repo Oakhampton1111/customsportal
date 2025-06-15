@@ -2,11 +2,10 @@ name: customs-broker-portal
 services:
 - name: backend
   source_dir: /backend
+  dockerfile_path: backend/Dockerfile
   github:
     repo: Oakhampton1111/customsportal
     branch: main
-  run_command: python main.py
-  environment_slug: python
   instance_count: 1
   instance_size_slug: basic-xxs
   envs:
@@ -40,12 +39,10 @@ services:
 
 - name: frontend
   source_dir: /frontend
+  dockerfile_path: frontend/Dockerfile
   github:
     repo: Oakhampton1111/customsportal
     branch: main
-  build_command: npm run build
-  run_command: npm run preview -- --host 0.0.0.0 --port $PORT
-  environment_slug: node-js
   instance_count: 1
   instance_size_slug: basic-xxs
   envs:
@@ -53,7 +50,7 @@ services:
     value: https://customs-broker-portal.ondigitalocean.app
   - key: VITE_ENVIRONMENT
     value: production
-  http_port: 8080
+  http_port: 80
   routes:
   - path: /
 
