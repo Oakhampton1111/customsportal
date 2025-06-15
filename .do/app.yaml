@@ -1,12 +1,12 @@
 name: customs-broker-portal
 services:
 - name: backend
-  source_dir: /backend
   github:
     repo: Oakhampton1111/customsportal
     branch: master
     deploy_on_push: true
-  dockerfile_path: backend/Dockerfile
+  dockerfile_path: ./backend/Dockerfile
+  source_dir: ./backend
   instance_count: 1
   instance_size_slug: basic-xxs
   envs:
@@ -39,12 +39,12 @@ services:
   - path: /health
 
 - name: frontend
-  source_dir: /frontend
   github:
     repo: Oakhampton1111/customsportal
     branch: master
     deploy_on_push: true
-  dockerfile_path: frontend/Dockerfile
+  dockerfile_path: ./frontend/Dockerfile
+  source_dir: ./frontend
   instance_count: 1
   instance_size_slug: basic-xxs
   envs:
