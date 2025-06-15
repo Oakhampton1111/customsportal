@@ -8,33 +8,36 @@ ENV PYTHONPATH=/app
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and CA certificates
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         postgresql-client \
         curl \
         build-essential \
         libpq-dev \
+        ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+# Add CA certificate and update system trust store
+COPY certs/ca.crt /usr/local/share/ca-certificates/ca.crt
+RUN update-ca-certificates
 
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project
+# Copy application code
 COPY . .
 
-# Create non-root user
-RUN adduser --disabled-password --gecos '' appuser
-RUN chown -R appuser:appuser /app
+# Create non-root user and set permissions
+RUN adduser --disabled-password --gecos '' appuser \\
+    && chown -R appuser:appuser /app
 USER appuser
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Expose port
+# Expose port and run application
 EXPOSE 8000
-
-# Run the application
 CMD ["python", "main.py"]
