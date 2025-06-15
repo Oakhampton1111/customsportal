@@ -5,8 +5,7 @@ services:
   github:
     repo: Oakhampton1111/customsportal
     branch: master
-  run_command: python main.py
-  environment_slug: python
+  dockerfile_path: backend/Dockerfile
   instance_count: 1
   instance_size_slug: basic-xxs
   envs:
@@ -43,9 +42,7 @@ services:
   github:
     repo: Oakhampton1111/customsportal
     branch: master
-  build_command: npm run build
-  run_command: npm run preview -- --host 0.0.0.0 --port $PORT
-  environment_slug: node-js
+  dockerfile_path: frontend/Dockerfile
   instance_count: 1
   instance_size_slug: basic-xxs
   envs:

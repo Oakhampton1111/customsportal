@@ -21,7 +21,9 @@
 
 4. **Deploy**
    - Click "Create Resources"
-   - Digital Ocean will automatically create the database and deploy both services
+   - Digital Ocean will build using Docker containers and deploy both services
+   - Backend uses `backend/Dockerfile`
+   - Frontend uses `frontend/Dockerfile`
 
 ### Method 2: Using GitHub Integration
 
