@@ -1,6 +1,7 @@
 name: customs-broker-portal
 services:
 - name: backend
+  source_dir: /backend
   github:
     repo: Oakhampton1111/customsportal
     branch: master
@@ -38,6 +39,7 @@ services:
   - path: /health
 
 - name: frontend
+  source_dir: /frontend
   github:
     repo: Oakhampton1111/customsportal
     branch: master
