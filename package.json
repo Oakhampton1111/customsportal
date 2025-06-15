@@ -1,7 +1,0 @@
-{
-  "name": "customs-broker-portal-root",
-  "private": true,
-  "scripts": {
-    "start": "echo 'Root package.json placeholder'"
-  }
-}

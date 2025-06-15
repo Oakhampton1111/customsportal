@@ -1,3 +1,0 @@
-# Root requirements for buildpack detection
-# Actual Python dependencies are in backend/requirements.txt
--r backend/requirements.txt
