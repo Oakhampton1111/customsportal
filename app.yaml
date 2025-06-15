@@ -10,7 +10,7 @@ services:
   instance_size_slug: basic-xxs
   envs:
   - key: DATABASE_URL
-    value: ${db.DATABASE_URL}
+    value: ${customsportal2.DATABASE_URL}
   - key: ENVIRONMENT
     value: production
   - key: ANTHROPIC_API_KEY
@@ -47,8 +47,6 @@ services:
   - path: /
 
 databases:
-- name: db
+- name: customsportal2
   engine: PG
-  version: "15"
-  size: basic-xs
-  num_nodes: 1
+  version: "17"
