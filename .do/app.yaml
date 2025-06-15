@@ -1,0 +1,65 @@
+name: customs-broker-portal
+services:
+- name: backend
+  source_dir: /backend
+  github:
+    repo: Oakhampton1111/customsportal
+    branch: master
+  run_command: python main.py
+  environment_slug: python
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  envs:
+  - key: DATABASE_URL
+    value: ${db.DATABASE_URL}
+  - key: ENVIRONMENT
+    value: production
+  - key: ANTHROPIC_API_KEY
+    value: ${ANTHROPIC_API_KEY}
+    type: SECRET
+  - key: SECRET_KEY
+    value: ${SECRET_KEY}
+    type: SECRET
+  - key: CORS_ORIGINS
+    value: https://customs-broker-portal.ondigitalocean.app
+  - key: LOG_LEVEL
+    value: INFO
+  - key: LOG_FORMAT
+    value: json
+  - key: DATABASE_POOL_SIZE
+    value: "10"
+  - key: DATABASE_MAX_OVERFLOW
+    value: "20"
+  health_check:
+    http_path: /health
+  http_port: 8000
+  routes:
+  - path: /api
+  - path: /docs
+  - path: /health
+
+- name: frontend
+  source_dir: /frontend
+  github:
+    repo: Oakhampton1111/customsportal
+    branch: master
+  build_command: npm run build
+  run_command: npm run preview -- --host 0.0.0.0 --port $PORT
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  envs:
+  - key: VITE_API_URL
+    value: https://customs-broker-portal.ondigitalocean.app
+  - key: VITE_ENVIRONMENT
+    value: production
+  http_port: 8080
+  routes:
+  - path: /
+
+databases:
+- name: db
+  engine: PG
+  version: "15"
+  size: basic-xs
+  num_nodes: 1
