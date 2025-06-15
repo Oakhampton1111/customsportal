@@ -40,5 +40,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 
 # Expose port and run application
 EXPOSE 8000
-# CMD ["python", "main.py"]
-CMD ["sh", "-c", "echo 'Test log: Backend Dockerfile CMD executed.' && sleep 5 && echo 'Test log: Exiting after 5 seconds.'"]
+CMD ["python", "main.py"]
