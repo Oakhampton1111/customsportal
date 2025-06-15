@@ -298,19 +298,33 @@ async def get_database_info() -> dict:
     """
     try:
         async with get_db_session() as session:
-            # Get SQLite version
-            version_result = await session.execute(text("SELECT sqlite_version()"))
-            version = version_result.scalar()
-            
-            # For SQLite, we don't have current_database() function
-            database_name = "customs_portal.db"
-            
-            # SQLite doesn't have pg_stat_activity, so we'll use a simple count
-            active_connections = 1  # SQLite typically has one connection
+            if not engine:
+                raise RuntimeError("Database engine not initialized")
+                
+            # Check if we're using PostgreSQL or SQLite
+            if "postgresql" in str(engine.url):
+                # PostgreSQL queries
+                version_result = await session.execute(text("SELECT version()"))
+                version = version_result.scalar()
+                
+                db_name_result = await session.execute(text("SELECT current_database()"))
+                database_name = db_name_result.scalar()
+                
+                # Get active connections count
+                conn_result = await session.execute(text("SELECT count(*) FROM pg_stat_activity"))
+                active_connections = conn_result.scalar()
+                
+            else:
+                # SQLite queries (fallback)
+                version_result = await session.execute(text("SELECT sqlite_version()"))
+                version = version_result.scalar()
+                database_name = "customs_portal.db"
+                active_connections = 1
+                version = f"SQLite {version}"
             
             return {
                 "database_name": database_name,
-                "version": f"SQLite {version}",
+                "version": version,
                 "active_connections": active_connections,
                 "engine_url": str(engine.url) if engine else None,
                 "pool_size": get_settings().database_pool_size,
