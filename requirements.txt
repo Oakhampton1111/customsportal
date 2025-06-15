@@ -1,4 +1,0 @@
-# Root requirements for Digital Ocean detection
-# Actual requirements are in backend/requirements.txt
-fastapi>=0.104.1
-uvicorn>=0.24.0
