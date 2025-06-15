@@ -1,12 +1,10 @@
 name: customs-broker-portal
 services:
 - name: backend
-  github:
-    repo: Oakhampton1111/customsportal
+  git:
+    repo_clone_url: https://github.com/Oakhampton1111/customsportal.git
     branch: master
-    deploy_on_push: true
-  dockerfile_path: Dockerfile
-  source_dir: backend
+  dockerfile_path: backend/Dockerfile
   instance_count: 1
   instance_size_slug: basic-xxs
   envs:
@@ -22,14 +20,6 @@ services:
     type: SECRET
   - key: CORS_ORIGINS
     value: https://customs-broker-portal.ondigitalocean.app
-  - key: LOG_LEVEL
-    value: INFO
-  - key: LOG_FORMAT
-    value: json
-  - key: DATABASE_POOL_SIZE
-    value: "10"
-  - key: DATABASE_MAX_OVERFLOW
-    value: "20"
   health_check:
     http_path: /health
   http_port: 8000
@@ -39,12 +29,10 @@ services:
   - path: /health
 
 - name: frontend
-  github:
-    repo: Oakhampton1111/customsportal
+  git:
+    repo_clone_url: https://github.com/Oakhampton1111/customsportal.git
     branch: master
-    deploy_on_push: true
-  dockerfile_path: Dockerfile
-  source_dir: frontend
+  dockerfile_path: frontend/Dockerfile
   instance_count: 1
   instance_size_slug: basic-xxs
   envs:
