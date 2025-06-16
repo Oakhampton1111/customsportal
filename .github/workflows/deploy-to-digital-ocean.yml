@@ -1,0 +1,92 @@
+name: Deploy to Digital Ocean
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  REGISTRY: registry.digitalocean.com
+  IMAGE_NAME: customs-broker-portal
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install doctl
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+    - name: Log in to DigitalOcean Container Registry
+      run: doctl registry login --expiry-seconds 1200
+
+    - name: Get App ID
+      id: get-app-id
+      run: |
+        APP_ID=$(doctl apps list --format ID,Name --no-header | grep "customs-broker-portal" | awk '{print $1}')
+        echo "APP_ID=$APP_ID" >> $GITHUB_OUTPUT
+        echo "Found App ID: $APP_ID"
+
+    - name: Trigger Deployment
+      run: |
+        echo "Triggering deployment for app ID: ${{ steps.get-app-id.outputs.APP_ID }}"
+        doctl apps create-deployment ${{ steps.get-app-id.outputs.APP_ID }} --force-rebuild
+
+    - name: Wait for Deployment
+      run: |
+        echo "Waiting for deployment to complete..."
+        sleep 30
+        
+        # Check deployment status
+        DEPLOYMENT_ID=$(doctl apps list-deployments ${{ steps.get-app-id.outputs.APP_ID }} --format ID --no-header | head -1)
+        echo "Latest deployment ID: $DEPLOYMENT_ID"
+        
+        # Wait for deployment to complete (max 15 minutes)
+        for i in {1..30}; do
+          STATUS=$(doctl apps get-deployment ${{ steps.get-app-id.outputs.APP_ID }} $DEPLOYMENT_ID --format Phase --no-header)
+          echo "Deployment status: $STATUS"
+          
+          if [ "$STATUS" = "ACTIVE" ]; then
+            echo "✅ Deployment completed successfully!"
+            break
+          elif [ "$STATUS" = "ERROR" ] || [ "$STATUS" = "CANCELED" ]; then
+            echo "❌ Deployment failed with status: $STATUS"
+            exit 1
+          fi
+          
+          echo "Waiting... (attempt $i/30)"
+          sleep 30
+        done
+
+    - name: Verify Deployment
+      run: |
+        echo "Verifying deployment..."
+        # Wait a bit more for health checks
+        sleep 60
+        
+        # Test health endpoint
+        curl -f https://customs-broker-portal.ondigitalocean.app/health || {
+          echo "❌ Health check failed"
+          exit 1
+        }
+        
+        echo "✅ Deployment verification successful!"
+
+    - name: Notify Success
+      if: success()
+      run: |
+        echo "🎉 Deployment to Digital Ocean completed successfully!"
+        echo "🔗 App URL: https://customs-broker-portal.ondigitalocean.app"
+        echo "🏥 Health Check: https://customs-broker-portal.ondigitalocean.app/health"
+
+    - name: Notify Failure
+      if: failure()
+      run: |
+        echo "❌ Deployment failed. Check the logs above for details."
+        echo "🔍 You can also check the Digital Ocean dashboard for more information."
