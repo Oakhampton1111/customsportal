@@ -4,6 +4,7 @@ services:
   git:
     repo_clone_url: https://github.com/Oakhampton1111/customsportal.git
     branch: master
+    deploy_on_push: true
   source_dir: backend
   dockerfile_path: Dockerfile
   instance_count: 1
@@ -21,8 +22,16 @@ services:
     type: SECRET
   - key: CORS_ORIGINS
     value: https://customs-broker-portal.ondigitalocean.app
+  - key: HOST
+    value: "0.0.0.0"
+  - key: PORT
+    value: "8000"
   health_check:
     http_path: /health
+    initial_delay_seconds: 60
+    period_seconds: 30
+    timeout_seconds: 10
+    failure_threshold: 5
   http_port: 8000
   routes:
   - path: /api
@@ -33,6 +42,7 @@ services:
   git:
     repo_clone_url: https://github.com/Oakhampton1111/customsportal.git
     branch: master
+    deploy_on_push: true
   source_dir: frontend
   dockerfile_path: Dockerfile
   instance_count: 1

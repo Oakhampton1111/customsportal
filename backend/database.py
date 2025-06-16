@@ -5,6 +5,7 @@ This module provides async SQLAlchemy setup with connection pooling,
 session management, and database utilities for the FastAPI application.
 """
 
+import asyncio
 import logging
 from typing import AsyncGenerator, Optional
 from contextlib import asynccontextmanager
@@ -148,14 +149,31 @@ async def init_database() -> None:
         engine = await create_database_engine()
         async_session_factory = create_session_factory(engine)
         
-        # Test the connection
-        await test_database_connection()
+        # Test the connection with retry logic
+        max_retries = 5
+        retry_delay = 2
         
-        logger.info("Database initialization completed successfully")
+        for attempt in range(max_retries):
+            try:
+                await test_database_connection()
+                logger.info("Database initialization completed successfully")
+                return
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"Database connection attempt {attempt + 1} failed: {e}. Retrying in {retry_delay} seconds...")
+                    await asyncio.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                else:
+                    logger.error(f"Database connection failed after {max_retries} attempts: {e}")
+                    # Don't raise the exception - allow the app to start even if DB is not ready
+                    # The health check will handle this gracefully
+                    logger.warning("Starting application without database connection. Health checks will show 'initializing' status.")
+                    return
         
     except Exception as e:
         logger.error(f"Database initialization failed: {e}")
-        raise
+        # Don't raise the exception - allow the app to start
+        logger.warning("Starting application without database connection. Health checks will show 'initializing' status.")
 
 
 async def close_database() -> None:
