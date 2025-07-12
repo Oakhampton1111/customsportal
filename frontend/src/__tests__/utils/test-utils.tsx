@@ -76,7 +76,7 @@ export const fillForm = async (
   getByLabelText: (text: string) => HTMLElement,
   formData: Record<string, string>
 ) => {
-  const { userEvent } = await import('@testing-library/user-event');
+  const userEvent = (await import('@testing-library/user-event')).default;
   const user = userEvent.setup();
   
   for (const [label, value] of Object.entries(formData)) {

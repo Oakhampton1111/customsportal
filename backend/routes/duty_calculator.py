@@ -7,30 +7,38 @@ general rates, FTA rates, anti-dumping duties, TCO exemptions, and GST calculati
 
 import logging
 import time
-from typing import List, Optional, Dict, Any
 from datetime import date
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Path
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_
-from sqlalchemy.orm import selectinload
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from sqlalchemy import and_, or_, select
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from database import get_async_session
-from services.duty_calculator import DutyCalculatorService, DutyComponent, DutyCalculationInput
+from models.dumping import DumpingDuty
 from models.duty import DutyRate
 from models.fta import FtaRate
-from models.dumping import DumpingDuty
-from models.tco import Tco
 from models.hierarchy import TradeAgreement
 from models.tariff import TariffCode
+from models.tco import Tco
 from schemas.duty_calculator import (
-    DutyCalculationRequest, DutyCalculationResponse, DutyComponentResponse,
-    DutyBreakdownResponse, DutyRatesListResponse, DutyRateResponse,
-    FtaRateResponse, TcoExemptionResponse, AntiDumpingDutyResponse,
-    FtaRateRequest, TcoCheckRequest, ErrorResponse
+    AntiDumpingDutyResponse,
+    DutyBreakdownResponse,
+    DutyCalculationRequest,
+    DutyCalculationResponse,
+    DutyComponentResponse,
+    DutyRateResponse,
+    DutyRatesListResponse,
+    ErrorResponse,
+    FtaRateRequest,
+    FtaRateResponse,
+    TcoCheckRequest,
+    TcoExemptionResponse,
 )
+from services.duty_calculator import DutyCalculationInput, DutyCalculatorService, DutyComponent
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -593,7 +601,7 @@ async def calculate_comprehensive_duties(
     alcohol_details: Optional[dict] = None,
     tobacco_details: Optional[dict] = None,
     db: AsyncSession = Depends(get_async_session)
-):
+) -> Dict[str, Any]:
     """
     Comprehensive duty calculation including all Australian import taxes:
     - Customs duties (general and preferential)

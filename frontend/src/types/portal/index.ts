@@ -1,6 +1,8 @@
 // Portal Type Definitions
 // Core types for the customer portal system
 
+import React from 'react';
+
 export interface User {
   id: string;
   email: string;
