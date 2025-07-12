@@ -22,6 +22,10 @@ from models.gst import GstProvision
 from models.export import ExportCode
 from models.classification import ProductClassification
 from models.conversation import Conversation, ConversationMessage
+from models.customer import Customer, CustomerSSOAccount, CustomerSession, CustomerAuthLog, CustomerVerification, CustomerVerificationDocument, CustomerShipment, CustomerDigitalAuthority
+from models.edi import EDIJob, EDIMessage, CustomsDeclaration, DeclarationItem
+from models.digital_loa import DigitalLetterOfAuthority, LOASignature, LOATemplate, LOAAuditLog
+from models.ai_document_processing import AIDocumentProcessing, ExtractedField, ProcessingTemplate
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -38,7 +42,8 @@ async def create_all_tables():
     
     # Verify tables
     async with engine.begin() as conn:
-        result = await conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        from sqlalchemy import text
+        result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
         tables = await result.fetchall()
         logger.info(f"Tables created: {[table[0] for table in tables]}")
     

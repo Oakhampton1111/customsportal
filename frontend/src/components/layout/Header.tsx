@@ -1,259 +1,206 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
 import {
-  FiHome,
-  FiSearch,
-  FiMessageSquare,
-  FiGlobe,
-  FiBell,
-  FiSettings,
-  FiUser,
-  FiMenu,
-  FiX,
-  FiChevronDown
-} from 'react-icons/fi';
+  FaBell,
+  FaUser,
+  FaSearch,
+  FaBars,
+  FaTimes
+} from 'react-icons/fa';
+import type { Customer } from '../../types/customer';
 
-interface NavigationItem {
-  name: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  description: string;
+interface HeaderProps {
+  user?: Customer;
+  onMenuToggle?: () => void;
+  isMobileMenuOpen?: boolean;
 }
 
-interface UserMenuProps {
-  isOpen: boolean;
-  onToggle: () => void;
-}
+const Header: React.FC<HeaderProps> = ({ 
+  user, 
+  onMenuToggle, 
+  isMobileMenuOpen = false 
+}) => {
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
-const UserMenu: React.FC<UserMenuProps> = ({ isOpen, onToggle }) => (
-  <div className="header__user-menu">
-    <button
-      onClick={onToggle}
-      className="header__user-button"
-      aria-expanded={isOpen}
-      aria-haspopup="true"
-    >
-      <div className="header__user-avatar">
-        <FiUser className="header__user-icon" />
-      </div>
-      <FiChevronDown className={`header__user-chevron ${isOpen ? 'header__user-chevron--open' : ''}`} />
-    </button>
-    
-    {isOpen && (
-      <div className="header__user-dropdown">
-        <div className="header__user-info">
-          <div className="header__user-name">John Doe</div>
-          <div className="header__user-role">Customs Broker</div>
-        </div>
-        <div className="header__user-divider"></div>
-        <a href="#" className="header__user-link">Profile Settings</a>
-        <a href="#" className="header__user-link">Preferences</a>
-        <a href="#" className="header__user-link">Help & Support</a>
-        <div className="header__user-divider"></div>
-        <a href="#" className="header__user-link header__user-link--danger">Sign Out</a>
-      </div>
-    )}
-  </div>
-);
-
-export const Header: React.FC = () => {
-  const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const navigation: NavigationItem[] = [
-    { 
-      name: 'Dashboard', 
-      href: '/', 
-      icon: FiHome, 
-      description: 'Overview and trade intelligence' 
-    },
-    { 
-      name: 'Tariff Search', 
-      href: '/tariff-tree', 
-      icon: FiSearch, 
-      description: 'Interactive Schedule 3 explorer' 
-    },
-    { 
-      name: 'AI Assistant', 
-      href: '/ai-assistant', 
-      icon: FiMessageSquare, 
-      description: 'AI consultation and calculations' 
-    },
-    { 
-      name: 'Export Center', 
-      href: '/export-tariffs', 
-      icon: FiGlobe, 
-      description: 'AHECC codes and requirements' 
-    },
-  ];
-
-  const isActive = (path: string): boolean => {
-    return location.pathname === path || (path === '/' && location.pathname === '/dashboard');
-  };
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      // Navigate to search results or trigger search
-      console.log('Search:', searchQuery);
-    }
-  };
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-    setIsUserMenuOpen(false);
-  };
-
-  const toggleUserMenu = () => {
-    setIsUserMenuOpen(!isUserMenuOpen);
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    window.location.href = '/login';
   };
 
   return (
-    <header className="header">
-      <div className="header__container">
-        {/* Left Section - Branding */}
-        <div className="header__brand">
-          <Link to="/" className="header__logo" onClick={() => setIsMobileMenuOpen(false)}>
-            <div className="header__logo-icon">
-              <span className="header__logo-text">CB</span>
+    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Left side - Logo and mobile menu */}
+          <div className="flex items-center">
+            <button
+              onClick={onMenuToggle}
+              className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            >
+              {isMobileMenuOpen ? (
+                <FaTimes className="h-6 w-6" />
+              ) : (
+                <FaBars className="h-6 w-6" />
+              )}
+            </button>
+            
+            <div className="flex-shrink-0 flex items-center ml-4 lg:ml-0">
+              <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">CB</span>
+              </div>
+              <span className="ml-2 text-xl font-semibold text-gray-900 hidden sm:block">
+                Customs Broker Portal
+              </span>
             </div>
-            <div className="header__logo-content">
-              <span className="header__logo-title">Customs Broker Portal</span>
-              <span className="header__logo-subtitle">Trade Intelligence Platform</span>
-            </div>
-          </Link>
-          <div className="header__divider"></div>
-        </div>
+          </div>
 
-        {/* Center Section - Main Navigation */}
-        <nav className="header__nav">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`header__nav-link ${active ? 'header__nav-link--active' : ''}`}
-                title={item.description}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Icon className="header__nav-icon" />
-                <span className="header__nav-text">{item.name}</span>
-                {active && <div className="header__nav-indicator"></div>}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Right Section - User Actions */}
-        <div className="header__actions">
-          {/* Global Search */}
-          <form onSubmit={handleSearchSubmit} className="header__search">
-            <div className="header__search-input-wrapper">
-              <FiSearch className="header__search-icon" />
+          {/* Center - Search */}
+          <div className="hidden md:block flex-1 max-w-lg mx-8">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaSearch className="h-5 w-5 text-gray-400" />
+              </div>
               <input
                 type="text"
-                placeholder="Search tariffs, codes, regulations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="header__search-input"
-                aria-label="Global search"
+                placeholder="Search documents, LOAs, jobs..."
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-          </form>
+          </div>
 
-          {/* Notifications */}
-          <button className="header__action-button" aria-label="Notifications">
-            <FiBell className="header__action-icon" />
-            <span className="header__notification-badge">3</span>
-          </button>
+          {/* Right side - Notifications and user menu */}
+          <div className="flex items-center space-x-4">
+            {/* Notifications */}
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md relative"
+              >
+                <FaBell className="h-6 w-6" />
+                <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400"></span>
+              </button>
 
-          {/* Settings */}
-          <button className="header__action-button" aria-label="Settings">
-            <FiSettings className="header__action-icon" />
-          </button>
-
-          {/* User Menu */}
-          <UserMenu isOpen={isUserMenuOpen} onToggle={toggleUserMenu} />
-
-          {/* Mobile Menu Toggle */}
-          <button
-            onClick={toggleMobileMenu}
-            className="header__mobile-toggle"
-            aria-label="Toggle mobile menu"
-            aria-expanded={isMobileMenuOpen}
-          >
-            {isMobileMenuOpen ? (
-              <FiX className="header__mobile-icon" />
-            ) : (
-              <FiMenu className="header__mobile-icon" />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Navigation Overlay */}
-      {isMobileMenuOpen && (
-        <div className="header__mobile-overlay">
-          <div className="header__mobile-menu">
-            {/* Mobile Search */}
-            <form onSubmit={handleSearchSubmit} className="header__mobile-search">
-              <div className="header__search-input-wrapper">
-                <FiSearch className="header__search-icon" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="header__search-input"
-                />
-              </div>
-            </form>
-
-            {/* Mobile Navigation */}
-            <nav className="header__mobile-nav">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.href);
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`header__mobile-link ${active ? 'header__mobile-link--active' : ''}`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Icon className="header__mobile-icon" />
-                    <div className="header__mobile-content">
-                      <span className="header__mobile-title">{item.name}</span>
-                      <span className="header__mobile-description">{item.description}</span>
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                  <div className="p-4">
+                    <h3 className="text-sm font-medium text-gray-900 mb-3">Notifications</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0">
+                          <div className="h-2 w-2 bg-blue-400 rounded-full mt-2"></div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-900">Document uploaded successfully</p>
+                          <p className="text-xs text-gray-500">2 minutes ago</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0">
+                          <div className="h-2 w-2 bg-green-400 rounded-full mt-2"></div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-900">LOA signed and processed</p>
+                          <p className="text-xs text-gray-500">1 hour ago</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0">
+                          <div className="h-2 w-2 bg-yellow-400 rounded-full mt-2"></div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-900">EDI job requires attention</p>
+                          <p className="text-xs text-gray-500">3 hours ago</p>
+                        </div>
+                      </div>
                     </div>
-                  </Link>
-                );
-              })}
-            </nav>
+                    <div className="mt-4 pt-3 border-t border-gray-200">
+                      <button className="text-sm text-blue-600 hover:text-blue-500">
+                        View all notifications
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
-            {/* Mobile User Actions */}
-            <div className="header__mobile-actions">
-              <button className="header__mobile-action">
-                <FiBell className="header__mobile-action-icon" />
-                <span>Notifications</span>
-                <span className="header__notification-badge">3</span>
+            {/* User menu */}
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center space-x-3 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+              >
+                <div className="h-8 w-8 bg-gray-300 rounded-full flex items-center justify-center">
+                  {user?.profile_picture_url ? (
+                    <img
+                      src={user.profile_picture_url}
+                      alt={`${user.first_name} ${user.last_name}`}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <FaUser className="h-5 w-5 text-gray-600" />
+                  )}
+                </div>
+                <div className="hidden md:block text-left">
+                  <p className="text-sm font-medium text-gray-900">
+                    {user ? `${user.first_name} ${user.last_name}` : 'User'}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {user?.company_name || 'Customer'}
+                  </p>
+                </div>
               </button>
-              <button className="header__mobile-action">
-                <FiSettings className="header__mobile-action-icon" />
-                <span>Settings</span>
-              </button>
-              <button className="header__mobile-action">
-                <FiUser className="header__mobile-action-icon" />
-                <span>Profile</span>
-              </button>
+
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                  <div className="py-1">
+                    <a
+                      href="/profile"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Your Profile
+                    </a>
+                    <a
+                      href="/settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Settings
+                    </a>
+                    <a
+                      href="/help"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Help & Support
+                    </a>
+                    <div className="border-t border-gray-100"></div>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Mobile search */}
+      <div className="md:hidden px-4 pb-4">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FaSearch className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search..."
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+      </div>
     </header>
   );
 };
+
+export default Header;

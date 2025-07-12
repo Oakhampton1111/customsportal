@@ -1,0 +1,149 @@
+name: 🛡️ Setup Branch Protection Rules
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to protect'
+        required: true
+        default: 'main'
+        type: string
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  setup-protection:
+    name: 🛡️ Configure Branch Protection
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🛡️ Setup Branch Protection Rules
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ inputs.branch }}
+        run: |
+          echo "🛡️ Setting up branch protection for: $BRANCH"
+          
+          # Create branch protection rule
+          gh api \
+            --method PUT \
+            /repos/${{ github.repository }}/branches/$BRANCH/protection \
+            --field required_status_checks='{"strict":true,"contexts":["🎯 Frontend Quality Gate with Auto-Fix","🎯 Backend Quality Gate with Auto-Fix","🎯 Final Quality Gate - All Tests"]}' \
+            --field enforce_admins=true \
+            --field required_pull_request_reviews='{"required_approving_review_count":1,"dismiss_stale_reviews":true,"require_code_owner_reviews":false}' \
+            --field restrictions=null \
+            --field allow_force_pushes=false \
+            --field allow_deletions=false \
+            --field block_creations=false \
+            --field required_conversation_resolution=true \
+            --field lock_branch=false \
+            --field allow_fork_syncing=true
+          
+          echo "✅ Branch protection rules configured successfully"
+
+      - name: 📋 Display Protection Status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ inputs.branch }}
+        run: |
+          echo "📋 Current branch protection status for: $BRANCH"
+          gh api /repos/${{ github.repository }}/branches/$BRANCH/protection | jq '.'
+
+      - name: 🔧 Setup Auto-Merge Rules
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🔧 Configuring auto-merge settings..."
+          
+          # Enable auto-merge for the repository
+          gh api \
+            --method PATCH \
+            /repos/${{ github.repository }} \
+            --field allow_auto_merge=true \
+            --field allow_merge_commit=true \
+            --field allow_squash_merge=true \
+            --field allow_rebase_merge=false \
+            --field delete_branch_on_merge=true
+          
+          echo "✅ Auto-merge settings configured"
+
+      - name: 📝 Create Protection Summary
+        run: |
+          cat > branch_protection_summary.md << EOF
+          # 🛡️ Branch Protection Configuration Summary
+          
+          **Branch:** \`${{ inputs.branch }}\`
+          **Configured:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          
+          ## Protection Rules Applied
+          
+          ### ✅ Required Status Checks
+          - 🎯 Frontend Quality Gate with Auto-Fix
+          - 🎯 Backend Quality Gate with Auto-Fix  
+          - 🎯 Final Quality Gate - All Tests
+          - **Strict Mode**: Enabled (branches must be up-to-date)
+          
+          ### ✅ Pull Request Requirements
+          - **Required Reviews**: 1 approving review
+          - **Dismiss Stale Reviews**: Enabled
+          - **Code Owner Reviews**: Not required
+          - **Conversation Resolution**: Required
+          
+          ### ✅ Push Restrictions
+          - **Force Pushes**: Disabled
+          - **Deletions**: Disabled
+          - **Admin Enforcement**: Enabled
+          
+          ### ✅ Auto-Merge Settings
+          - **Auto-Merge**: Enabled
+          - **Merge Commits**: Allowed
+          - **Squash Merge**: Allowed
+          - **Rebase Merge**: Disabled
+          - **Delete Branch on Merge**: Enabled
+          
+          ## Self-Healing Pipeline Integration
+          
+          The branch protection rules are designed to work seamlessly with the self-healing CI/CD pipeline:
+          
+          1. **Quality Gates**: All quality gates must pass before merge
+          2. **Auto-Fix Integration**: Failed checks trigger automatic fixes
+          3. **Re-testing**: Pipeline automatically re-runs after fixes
+          4. **Auto-Merge**: Successful fixes can auto-merge (if enabled on PR)
+          
+          ## Next Steps
+          
+          1. Test the protection rules with a sample PR
+          2. Verify self-healing pipeline triggers correctly
+          3. Monitor auto-fix success rates
+          4. Adjust rules as needed based on team workflow
+          
+          ---
+          
+          **Note**: These settings ensure that only high-quality, tested code reaches the protected branch while maximizing automation and minimizing manual intervention.
+          EOF
+          
+          echo "📝 Protection summary created"
+
+      - name: 📊 Upload Configuration Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: branch-protection-report
+          path: branch_protection_summary.md
+          retention-days: 30
+
+      - name: ✅ Setup Complete
+        run: |
+          echo "🎉 Branch protection setup completed successfully!"
+          echo ""
+          echo "📋 Summary:"
+          echo "  ✅ Branch protection rules configured"
+          echo "  ✅ Required status checks set"
+          echo "  ✅ Pull request reviews required"
+          echo "  ✅ Auto-merge settings enabled"
+          echo "  ✅ Self-healing pipeline integration ready"
+          echo ""
+          echo "🔗 Next: Create a test PR to verify the setup"

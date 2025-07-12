@@ -82,7 +82,7 @@ class Tco(Base):
         # Composite indexes for performance
         Index("ix_tcos_hs_code_current", "hs_code", "is_current"),
         Index("ix_tcos_effective_expiry", "effective_date", "expiry_date"),
-        Index("ix_tcos_tco_number", "tco_number"),
+        # Note: tco_number index is already created by index=True in column definition
     )
     
     def __repr__(self) -> str:

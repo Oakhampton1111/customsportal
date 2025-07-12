@@ -1,0 +1,428 @@
+name: 🔄 Self-Healing CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+env:
+  MAX_RETRY_ATTEMPTS: 3
+  CURRENT_ATTEMPT: 1
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  # Quality Gate ① - Frontend TypeScript & Linting with Auto-Fix
+  frontend-quality:
+    name: 🎯 Frontend Quality Gate with Auto-Fix
+    runs-on: ubuntu-latest
+    outputs:
+      needs_retry: ${{ steps.check_failure.outputs.needs_retry }}
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📥 Install Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: 🔍 TypeScript Compilation Check
+        id: tsc_check
+        working-directory: frontend
+        continue-on-error: true
+        run: |
+          npx tsc -b 2>&1 | tee tsc_errors.log
+          echo "tsc_exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: 🧹 ESLint Check with Auto-Fix
+        id: eslint_check
+        working-directory: frontend
+        continue-on-error: true
+        run: |
+          # Try auto-fix first
+          npm run lint -- --fix 2>&1 | tee eslint_errors.log
+          echo "eslint_exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: 🤖 Auto-Fix TypeScript Issues with GitHub Copilot
+        if: steps.tsc_check.outputs.tsc_exit_code != '0'
+        working-directory: frontend
+        run: |
+          echo "🔧 Attempting to auto-fix TypeScript issues..."
+          
+          # Install GitHub CLI if not available
+          if ! command -v gh &> /dev/null; then
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt update
+            sudo apt install gh
+          fi
+          
+          # Use GitHub Copilot CLI for suggestions (if available)
+          if gh copilot --version &> /dev/null; then
+            echo "📝 Getting Copilot suggestions for TypeScript errors..."
+            gh copilot suggest "Fix TypeScript compilation errors: $(cat tsc_errors.log | head -10)"
+          fi
+          
+          # Common TypeScript auto-fixes
+          echo "🔧 Applying common TypeScript fixes..."
+          
+          # Fix missing imports
+          find src -name "*.ts" -o -name "*.tsx" | xargs grep -l "Cannot find name" | while read file; do
+            echo "Checking imports in $file"
+            # Add common missing imports
+            if grep -q "React" "$file" && ! grep -q "import.*React" "$file"; then
+              sed -i '1i import React from '\''react'\'';' "$file"
+            fi
+          done
+          
+          # Fix common type issues
+          find src -name "*.ts" -o -name "*.tsx" | while read file; do
+            # Fix any type to proper types
+            sed -i 's/: any\b/: unknown/g' "$file"
+            # Fix missing return types
+            sed -i 's/function \([^(]*\)(/function \1(): void (/g' "$file"
+          done
+
+      - name: 🤖 Auto-Fix ESLint Issues
+        if: steps.eslint_check.outputs.eslint_exit_code != '0'
+        working-directory: frontend
+        run: |
+          echo "🔧 Attempting to auto-fix ESLint issues..."
+          
+          # Run ESLint with aggressive auto-fix
+          npx eslint . --fix --ext .ts,.tsx,.js,.jsx
+          
+          # Fix common issues that ESLint can't auto-fix
+          find src -name "*.ts" -o -name "*.tsx" | while read file; do
+            # Remove unused imports
+            sed -i '/^import.*from.*$/d' "$file"
+            # Re-add necessary imports based on usage
+            if grep -q "useState" "$file" && ! grep -q "import.*useState" "$file"; then
+              sed -i '1i import { useState } from '\''react'\'';' "$file"
+            fi
+            if grep -q "useEffect" "$file" && ! grep -q "import.*useEffect" "$file"; then
+              sed -i '1i import { useEffect } from '\''react'\'';' "$file"
+            fi
+          done
+
+      - name: 🔄 Re-run Quality Checks
+        id: recheck
+        working-directory: frontend
+        continue-on-error: true
+        run: |
+          echo "🔄 Re-running TypeScript compilation..."
+          npx tsc -b
+          tsc_result=$?
+          
+          echo "🔄 Re-running ESLint..."
+          npm run lint
+          eslint_result=$?
+          
+          if [ $tsc_result -eq 0 ] && [ $eslint_result -eq 0 ]; then
+            echo "✅ Auto-fix successful!"
+            echo "success=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Auto-fix failed, manual intervention needed"
+            echo "success=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 💾 Commit Auto-Fixes
+        if: steps.recheck.outputs.success == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Auto-Fix"
+          
+          if [ -n "$(git status --porcelain)" ]; then
+            git add .
+            git commit -m "🤖 Auto-fix: TypeScript and ESLint issues
+            
+            - Fixed TypeScript compilation errors
+            - Applied ESLint auto-fixes
+            - Added missing imports
+            - Corrected type definitions
+            
+            Auto-generated by GitHub Actions Self-Healing Pipeline"
+            
+            git push
+            echo "✅ Auto-fixes committed and pushed"
+          else
+            echo "ℹ️ No changes to commit"
+          fi
+
+      - name: 🚨 Check if Retry Needed
+        id: check_failure
+        if: steps.recheck.outputs.success != 'true'
+        run: |
+          echo "needs_retry=true" >> $GITHUB_OUTPUT
+          echo "❌ Frontend quality gate failed, retry needed"
+
+  # Quality Gate ② - Backend Code Quality with Auto-Fix
+  backend-quality:
+    name: 🎯 Backend Quality Gate with Auto-Fix
+    runs-on: ubuntu-latest
+    needs: frontend-quality
+    if: needs.frontend-quality.outputs.needs_retry != 'true'
+    outputs:
+      needs_retry: ${{ steps.check_failure.outputs.needs_retry }}
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install Dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install black isort mypy
+
+      - name: 🔍 Code Formatting Check
+        id: black_check
+        working-directory: backend
+        continue-on-error: true
+        run: |
+          black --check . 2>&1 | tee black_errors.log
+          echo "black_exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: 🔍 Import Sorting Check
+        id: isort_check
+        working-directory: backend
+        continue-on-error: true
+        run: |
+          isort --check-only . 2>&1 | tee isort_errors.log
+          echo "isort_exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: 🔍 Type Checking
+        id: mypy_check
+        working-directory: backend
+        continue-on-error: true
+        run: |
+          mypy . --ignore-missing-imports 2>&1 | tee mypy_errors.log
+          echo "mypy_exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: 🤖 Auto-Fix Python Code Issues
+        working-directory: backend
+        run: |
+          echo "🔧 Applying Python auto-fixes..."
+          
+          # Auto-fix formatting
+          if [ "${{ steps.black_check.outputs.black_exit_code }}" != "0" ]; then
+            echo "🔧 Fixing code formatting with Black..."
+            black .
+          fi
+          
+          # Auto-fix import sorting
+          if [ "${{ steps.isort_check.outputs.isort_exit_code }}" != "0" ]; then
+            echo "🔧 Fixing import sorting with isort..."
+            isort .
+          fi
+          
+          # Auto-fix common mypy issues
+          if [ "${{ steps.mypy_check.outputs.mypy_exit_code }}" != "0" ]; then
+            echo "🔧 Attempting to fix common mypy issues..."
+            
+            # Add type hints to common patterns
+            find . -name "*.py" | while read file; do
+              # Add return type hints to functions without them
+              sed -i 's/def \([^(]*\)(\([^)]*\)):/def \1(\2) -> None:/g' "$file"
+              # Fix common type issues
+              sed -i 's/List\[/list[/g' "$file"
+              sed -i 's/Dict\[/dict[/g' "$file"
+              sed -i 's/Tuple\[/tuple[/g' "$file"
+            done
+          fi
+
+      - name: 🧪 Run Tests with Coverage
+        id: pytest_check
+        working-directory: backend
+        continue-on-error: true
+        run: |
+          pytest -v --cov=. --cov-report=term-missing 2>&1 | tee pytest_errors.log
+          echo "pytest_exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: 🔄 Re-run Quality Checks
+        id: recheck
+        working-directory: backend
+        continue-on-error: true
+        run: |
+          echo "🔄 Re-running Python quality checks..."
+          
+          black --check .
+          black_result=$?
+          
+          isort --check-only .
+          isort_result=$?
+          
+          mypy . --ignore-missing-imports
+          mypy_result=$?
+          
+          pytest -v --cov=. --cov-report=term-missing
+          pytest_result=$?
+          
+          if [ $black_result -eq 0 ] && [ $isort_result -eq 0 ] && [ $mypy_result -eq 0 ] && [ $pytest_result -eq 0 ]; then
+            echo "✅ Backend auto-fix successful!"
+            echo "success=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Backend auto-fix failed"
+            echo "success=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 💾 Commit Backend Auto-Fixes
+        if: steps.recheck.outputs.success == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Auto-Fix"
+          
+          if [ -n "$(git status --porcelain)" ]; then
+            git add .
+            git commit -m "🤖 Auto-fix: Python code quality issues
+            
+            - Applied Black code formatting
+            - Fixed import sorting with isort
+            - Added type hints for mypy
+            - Resolved common Python issues
+            
+            Auto-generated by GitHub Actions Self-Healing Pipeline"
+            
+            git push
+            echo "✅ Backend auto-fixes committed and pushed"
+          else
+            echo "ℹ️ No backend changes to commit"
+          fi
+
+      - name: 🚨 Check if Retry Needed
+        id: check_failure
+        if: steps.recheck.outputs.success != 'true'
+        run: |
+          echo "needs_retry=true" >> $GITHUB_OUTPUT
+          echo "❌ Backend quality gate failed, retry needed"
+
+  # Self-Healing Retry Logic
+  retry-pipeline:
+    name: 🔄 Self-Healing Retry
+    runs-on: ubuntu-latest
+    needs: [frontend-quality, backend-quality]
+    if: |
+      always() && 
+      (needs.frontend-quality.outputs.needs_retry == 'true' || 
+       needs.backend-quality.outputs.needs_retry == 'true') &&
+      github.run_attempt < 3
+    steps:
+      - name: 🔄 Trigger Pipeline Retry
+        run: |
+          echo "🔄 Triggering self-healing retry (attempt ${{ github.run_attempt }}/3)..."
+          
+          # Use GitHub API to re-run the workflow
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/rerun
+
+      - name: ⏳ Wait Before Retry
+        run: |
+          echo "⏳ Waiting 30 seconds before retry..."
+          sleep 30
+
+  # Final Quality Gate - All Tests
+  final-quality-gate:
+    name: 🎯 Final Quality Gate - All Tests
+    runs-on: ubuntu-latest
+    needs: [frontend-quality, backend-quality]
+    if: |
+      needs.frontend-quality.outputs.needs_retry != 'true' && 
+      needs.backend-quality.outputs.needs_retry != 'true'
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📥 Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: 🧪 Run Frontend Unit Tests
+        working-directory: frontend
+        run: npm run test:ci
+
+      - name: 📥 Install Playwright
+        working-directory: frontend
+        run: npx playwright install --with-deps
+
+      - name: 🧪 Run E2E Tests
+        working-directory: frontend
+        run: npm run test:e2e
+
+      - name: 📊 Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results
+          path: |
+            frontend/playwright-report/
+            frontend/coverage/
+          retention-days: 30
+
+      - name: ✅ All Quality Gates Passed
+        run: |
+          echo "🎉 All quality gates passed successfully!"
+          echo "✅ Frontend TypeScript & Linting"
+          echo "✅ Backend Code Quality & Tests"
+          echo "✅ Frontend Unit Tests"
+          echo "✅ End-to-End Tests"
+          echo ""
+          echo "🚀 Ready for deployment!"
+
+  # Deploy only after all quality gates pass
+  deploy:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: final-quality-gate
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🚀 Deploy to Digital Ocean
+        env:
+          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        run: |
+          echo "🚀 Deploying to Digital Ocean..."
+          # Use existing deployment workflow
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/deploy-to-digital-ocean.yml/dispatches \
+            -d '{"ref":"${{ github.ref }}"}'
+
+      - name: ✅ Deployment Triggered
+        run: |
+          echo "✅ Deployment workflow triggered successfully!"
+          echo "🔗 Monitor deployment: https://github.com/${{ github.repository }}/actions"

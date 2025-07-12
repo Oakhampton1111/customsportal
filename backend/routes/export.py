@@ -753,3 +753,28 @@ async def get_export_statistics_from_db(db: AsyncSession, ahecc_code: str, expor
         year_on_year_change=8.5,
         seasonal_pattern="Peak exports in Q1 and Q3"
     )
+
+@router.get("/tariffs", response_model=List[AHECCNode])
+async def get_export_tariffs(
+    section: Optional[str] = None,
+    parent_code: Optional[str] = None,
+    db: AsyncSession = Depends(get_async_session)
+):
+    """
+    Get export tariffs (AHECC hierarchical structure).
+    This is an alias for the ahecc-tree endpoint to match frontend expectations.
+    """
+    return await get_ahecc_tree(section=section, parent_code=parent_code, db=db)
+
+
+@router.get("/search", response_model=List[AHECCNode])
+async def search_export_codes(
+    query: str = Query(..., min_length=2),
+    limit: int = Query(50, ge=1, le=100),
+    db: AsyncSession = Depends(get_async_session)
+):
+    """
+    Search export codes by description or code.
+    This is an alias for the ahecc-search endpoint to match frontend expectations.
+    """
+    return await search_ahecc_codes(query=query, limit=limit, db=db)

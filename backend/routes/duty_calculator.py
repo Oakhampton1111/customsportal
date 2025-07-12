@@ -18,7 +18,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import SQLAlchemyError
 
 from database import get_async_session
-from services.duty_calculator import DutyCalculatorService, DutyComponent
+from services.duty_calculator import DutyCalculatorService, DutyComponent, DutyCalculationInput
 from models.duty import DutyRate
 from models.fta import FtaRate
 from models.dumping import DumpingDuty
