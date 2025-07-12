@@ -12,6 +12,11 @@ from routes.export import router as export_router
 from routes.rulings import router as rulings_router
 from routes.documents import router as documents_router
 from routes.reports import router as reports_router
+from routes.compliance import router as compliance_router
+from routes.customer_auth import router as customer_auth_router
+from routes.edi_routes import router as edi_router
+from routes.loa_routes import router as loa_router
+from routes.ai_document_processing import router as ai_document_processing_router
 # from routes.ai import router as ai_router  # Temporarily disabled due to CFFI dependency issue
 
 __all__ = [
@@ -23,5 +28,10 @@ __all__ = [
     "rulings_router",
     "documents_router",
     "reports_router",
+    "compliance_router",
+    "customer_auth_router",
+    "edi_router",
+    "loa_router",
+    "ai_document_processing_router",
     # "ai_router"  # Temporarily disabled
 ]
