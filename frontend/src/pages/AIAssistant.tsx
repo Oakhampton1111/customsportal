@@ -16,10 +16,20 @@ import {
   FiClock,
   FiDownload,
   FiSend,
-  FiSearch
+  FiSearch,
+  FiUpload,
+  FiZap,
+  FiActivity
 } from 'react-icons/fi';
 import { dutyCalculatorApi } from '../services/dutyCalculatorApi';
 import type { DutyCalculationRequest, DutyCalculationResult } from '../types';
+import { ProfessionalCard, ProfessionalCardHeader, ProfessionalCardContent } from '../components/ui/ProfessionalCard';
+import { ProfessionalTable } from '../components/ui/ProfessionalTable';
+import { ProfessionalFilters, SearchBar, QuickFilters } from '../components/ui/ProfessionalFilters';
+import { TabPanel, MasterDetail, Accordion } from '../components/ui/ProfessionalLayouts';
+import { ActionToolbar } from '../components/ui/ActionToolbar';
+import { KPICard, KPIGrid } from '../components/ui/KPICard';
+import { cn } from '../lib/utils';
 
 interface Message {
   id: string;
@@ -79,15 +89,67 @@ const AIAssistant: React.FC = () => {
   const [calculationResult, setCalculationResult] = useState<DutyCalculationResult | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   
+  // Professional component state
+  const [filterValues, setFilterValues] = useState<Record<string, any>>({});
+  const [showDetailView, setShowDetailView] = useState(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  });
+
+  // Enhanced state for modern features
+  const [savedQueries, setSavedQueries] = useState<Message[]>([]);
+  const [recentCalculations, setRecentCalculations] = useState<DutyCalculationResult[]>([]);
+  const [sessionStats, setSessionStats] = useState({
+    messagesCount: 0,
+    calculationsCount: 0,
+    documentsAnalyzed: 0,
+    sessionStartTime: new Date()
+  });
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     scrollToBottom();
+    // Update session stats
+    setSessionStats(prev => ({
+      ...prev,
+      messagesCount: messages.length,
+      calculationsCount: messages.filter(m => m.type === 'calculation').length,
+      documentsAnalyzed: messages.filter(m => m.type === 'document').length
+    }));
   }, [messages]);
+
+  // Load saved data from localStorage
+  useEffect(() => {
+    const savedQueries = localStorage.getItem('ai-saved-queries');
+    const recentCalcs = localStorage.getItem('ai-recent-calculations');
+    
+    if (savedQueries) {
+      setSavedQueries(JSON.parse(savedQueries));
+    }
+    if (recentCalcs) {
+      setRecentCalculations(JSON.parse(recentCalcs));
+    }
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const saveQuery = (message: Message) => {
+    const newSavedQueries = [message, ...savedQueries.filter(q => q.id !== message.id)].slice(0, 10);
+    setSavedQueries(newSavedQueries);
+    localStorage.setItem('ai-saved-queries', JSON.stringify(newSavedQueries));
+  };
+
+  const saveCalculation = (result: DutyCalculationResult) => {
+    const newRecentCalcs = [result, ...recentCalculations].slice(0, 5);
+    setRecentCalculations(newRecentCalcs);
+    localStorage.setItem('ai-recent-calculations', JSON.stringify(newRecentCalcs));
   };
 
   const handleSendMessage = async () => {
@@ -143,6 +205,7 @@ const AIAssistant: React.FC = () => {
 
       const result = await dutyCalculatorApi.calculateDuty(requestData);
       setCalculationResult(result);
+      saveCalculation(result);
       
       const calculationMessage: Message = {
         id: Date.now().toString(),
@@ -223,9 +286,9 @@ const AIAssistant: React.FC = () => {
               <div className="mt-3 p-3 bg-gray-50 rounded border">
                 <h4 className="font-medium text-gray-900 mb-2">Duty Calculation Result</h4>
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div>Total Duty: ${message.data.total_duty?.toFixed(2) || '0.00'}</div>
-                  <div>GST: ${message.data.total_gst?.toFixed(2) || '0.00'}</div>
-                  <div>Total Cost: ${message.data.total_amount?.toFixed(2) || '0.00'}</div>
+                  <div>Total Duty: ${parseFloat(message.data.total_duty || '0').toFixed(2)}</div>
+                  <div>GST: ${parseFloat(message.data.total_gst || '0').toFixed(2)}</div>
+                  <div>Total Cost: ${parseFloat(message.data.total_amount || '0').toFixed(2)}</div>
                 </div>
               </div>
             )}
@@ -257,415 +320,458 @@ const AIAssistant: React.FC = () => {
   };
 
   return (
-    <div className="content fade-in">
-      {/* Header Section */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              AI Customs Assistant
-            </h1>
-            <p className="text-lg text-gray-600">
-              Expert guidance for duty calculations and customs compliance
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <button className="btn btn--secondary">
-              <FiSettings className="w-4 h-4" />
-              Settings
-            </button>
-            <button className="btn btn--primary">
-              <FiDownload className="w-4 h-4" />
-              Export Chat
-            </button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Professional Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                  <FiZap className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-900">AI Customs Assistant</h1>
+                  <p className="text-sm text-gray-600">Expert guidance for duty calculations and customs compliance</p>
+                </div>
+              </div>
+            </div>
+            
+            <ActionToolbar
+              actions={[
+                {
+                  id: 'settings',
+                  label: 'Settings',
+                  icon: <FiSettings className="w-4 h-4" />,
+                  onClick: () => console.log('Settings'),
+                  variant: 'default'
+                },
+                {
+                  id: 'export',
+                  label: 'Export Chat',
+                  icon: <FiDownload className="w-4 h-4" />,
+                  onClick: () => console.log('Export chat'),
+                  variant: 'default'
+                }
+              ]}
+              showSelectionInfo={false}
+              className="border-0 bg-transparent p-0"
+            />
           </div>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="mb-6">
-        <nav className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-          <button
-            onClick={() => setActiveTab('chat')}
-            className={`px-4 py-2 rounded-md font-medium transition-colors ${
-              activeTab === 'chat'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <FiMessageSquare className="w-4 h-4 inline mr-2" />
-            AI Chat
-          </button>
-          <button
-            onClick={() => setActiveTab('calculator')}
-            className={`px-4 py-2 rounded-md font-medium transition-colors ${
-              activeTab === 'calculator'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <FiHash className="w-4 h-4 inline mr-2" />
-            Duty Calculator
-          </button>
-          <button
-            onClick={() => setActiveTab('tools')}
-            className={`px-4 py-2 rounded-md font-medium transition-colors ${
-              activeTab === 'tools'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <FiTool className="w-4 h-4 inline mr-2" />
-            AI Tools
-          </button>
-        </nav>
-      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <nav className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                activeTab === 'chat'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <FiMessageSquare className="w-4 h-4 inline mr-2" />
+              AI Chat
+            </button>
+            <button
+              onClick={() => setActiveTab('calculator')}
+              className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                activeTab === 'calculator'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <FiHash className="w-4 h-4 inline mr-2" />
+              Duty Calculator
+            </button>
+            <button
+              onClick={() => setActiveTab('tools')}
+              className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                activeTab === 'tools'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <FiTool className="w-4 h-4 inline mr-2" />
+              AI Tools
+            </button>
+          </nav>
+        </div>
 
-      {/* Tab Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-3">
-          {activeTab === 'chat' && (
-            <div className="card h-[600px] flex flex-col">
-              <div className="card__header">
-                <h3 className="card__title">AI Conversation</h3>
-                <p className="card__subtitle">Ask questions about customs and trade</p>
-              </div>
-              
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map(renderMessage)}
-                {isLoading && (
-                  <div className="flex gap-3 justify-start">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                      <FiTool className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div className="max-w-3xl">
-                      <div className="p-4 rounded-lg bg-white border border-gray-200">
-                        <div className="flex items-center gap-2">
-                          <div className="loading-spinner w-4 h-4"></div>
-                          <span className="text-sm text-gray-600">AI is thinking...</span>
+        {/* Tab Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            {activeTab === 'chat' && (
+              <ProfessionalCard variant="default" className="h-[600px] flex flex-col">
+                <ProfessionalCardHeader subtitle="Ask questions about customs and trade">
+                  AI Conversation
+                </ProfessionalCardHeader>
+                <ProfessionalCardContent className="flex-1 flex flex-col">
+                  {/* Messages */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    {messages.map(renderMessage)}
+                    {isLoading && (
+                      <div className="flex gap-3 justify-start">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                          <FiTool className="w-4 h-4 text-blue-600" />
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-              
-              {/* Input */}
-              <div className="border-t p-4">
-                <div className="flex gap-3">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
-                    className="hidden"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                  />
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="btn btn--ghost"
-                    disabled={isLoading}
-                  >
-                    <FiImage className="w-4 h-4" />
-                  </button>
-                  <input
-                    type="text"
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder="Ask about customs regulations, duty calculations, or upload documents..."
-                    className="input flex-1"
-                    disabled={isLoading}
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    className="btn btn--primary"
-                    disabled={isLoading || !inputMessage.trim()}
-                  >
-                    <FiSend className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'calculator' && (
-            <div className="card">
-              <div className="card__header">
-                <h3 className="card__title">Comprehensive Duty Calculator</h3>
-                <p className="card__subtitle">Calculate all import taxes and duties</p>
-              </div>
-              <div className="card__body">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="label">HS Code</label>
-                      <input
-                        type="text"
-                        value={calculationData.hs_code}
-                        onChange={(e) => setCalculationData(prev => ({ ...prev, hs_code: e.target.value }))}
-                        placeholder="e.g., 8471.30.00 or 8471300000"
-                        className="input w-full"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Enter 8-10 digit HS code (dots optional)</p>
-                    </div>
-                    
-                    <div>
-                      <label className="label">Value (AUD)</label>
-                      <input
-                        type="number"
-                        value={calculationData.customs_value}
-                        onChange={(e) => setCalculationData(prev => ({ ...prev, customs_value: Number(e.target.value) }))}
-                        placeholder="0.00"
-                        className="input w-full"
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="label">Country of Origin</label>
-                      <select
-                        value={calculationData.country_code}
-                        onChange={(e) => setCalculationData(prev => ({ ...prev, country_code: e.target.value }))}
-                        className="input w-full"
-                      >
-                        <option value="CN">China</option>
-                        <option value="US">United States</option>
-                        <option value="DE">Germany</option>
-                        <option value="JP">Japan</option>
-                        <option value="GB">United Kingdom</option>
-                        <option value="KR">South Korea</option>
-                        <option value="TH">Thailand</option>
-                        <option value="VN">Vietnam</option>
-                        <option value="MY">Malaysia</option>
-                        <option value="SG">Singapore</option>
-                      </select>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="label">Quantity</label>
-                        <input
-                          type="number"
-                          value={calculationData.quantity}
-                          onChange={(e) => setCalculationData(prev => ({ ...prev, quantity: Number(e.target.value) }))}
-                          className="input w-full"
-                          min="1"
-                        />
-                      </div>
-                      <div>
-                        <label className="label">Currency</label>
-                        <select
-                          value={calculationData.currency}
-                          onChange={(e) => setCalculationData(prev => ({ ...prev, currency: e.target.value }))}
-                          className="input w-full"
-                        >
-                          <option value="AUD">AUD</option>
-                          <option value="USD">USD</option>
-                          <option value="EUR">EUR</option>
-                          <option value="GBP">GBP</option>
-                        </select>
-                      </div>
-                    </div>
-                    
-                    <button
-                      onClick={handleCalculation}
-                      className="btn btn--primary w-full"
-                      disabled={isLoading || !calculationData.hs_code || !calculationData.customs_value}
-                    >
-                      {isLoading ? (
-                        <>
-                          <FiLoader className="w-4 h-4 animate-spin" />
-                          Calculating...
-                        </>
-                      ) : (
-                        <>
-                          <FiHash className="w-4 h-4" />
-                          Calculate Duties
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  
-                  {calculationResult && (
-                    <div className="space-y-4">
-                      <h4 className="font-semibold text-gray-900">Calculation Results</h4>
-                      <div className="space-y-3">
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <div className="text-sm text-gray-600">Customs Duty</div>
-                          <div className="text-lg font-semibold">${calculationResult.total_duty?.toFixed(2) || '0.00'}</div>
-                        </div>
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <div className="text-sm text-gray-600">GST</div>
-                          <div className="text-lg font-semibold">${calculationResult.total_gst?.toFixed(2) || '0.00'}</div>
-                        </div>
-                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                          <div className="text-sm text-blue-600">Total Import Cost</div>
-                          <div className="text-xl font-bold text-blue-900">${calculationResult.total_amount?.toFixed(2) || '0.00'}</div>
-                        </div>
-                        {calculationResult.components && calculationResult.components.length > 0 && (
-                          <div className="mt-4">
-                            <h5 className="font-medium text-gray-900 mb-2">Duty Breakdown</h5>
-                            <div className="space-y-2">
-                              {calculationResult.components.map((component, index) => (
-                                <div key={index} className="flex justify-between text-sm">
-                                  <span className="text-gray-600">{component.description}</span>
-                                  <span className="font-medium">${component.amount.toFixed(2)}</span>
-                                </div>
-                              ))}
+                        <div className="max-w-3xl">
+                          <div className="p-4 rounded-lg bg-white border border-gray-200">
+                            <div className="flex items-center gap-2">
+                              <div className="loading-spinner w-4 h-4"></div>
+                              <span className="text-sm text-gray-600">AI is thinking...</span>
                             </div>
                           </div>
-                        )}
-                        {calculationResult.warnings && calculationResult.warnings.length > 0 && (
-                          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                            <h5 className="font-medium text-yellow-800 mb-1">Warnings</h5>
-                            <ul className="text-sm text-yellow-700 space-y-1">
-                              {calculationResult.warnings.map((warning, index) => (
-                                <li key={index}>• {warning}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
+                        </div>
                       </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+                  
+                  {/* Input */}
+                  <div className="border-t p-4">
+                    <div className="flex gap-3">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+                        className="hidden"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      />
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="btn btn--ghost"
+                        disabled={isLoading}
+                      >
+                        <FiImage className="w-4 h-4" />
+                      </button>
+                      <input
+                        type="text"
+                        value={inputMessage}
+                        onChange={(e) => setInputMessage(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                        placeholder="Ask about customs regulations, duty calculations, or upload documents..."
+                        className="input flex-1"
+                        disabled={isLoading}
+                      />
+                      <button
+                        onClick={handleSendMessage}
+                        className="btn btn--primary"
+                        disabled={isLoading || !inputMessage.trim()}
+                      >
+                        <FiSend className="w-4 h-4" />
+                      </button>
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+                  </div>
+                </ProfessionalCardContent>
+              </ProfessionalCard>
+            )}
 
-          {activeTab === 'tools' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="card">
-                  <div className="card__header">
-                    <h3 className="card__title flex items-center gap-2">
-                      <FiImage className="w-5 h-5 text-blue-500" />
+            {activeTab === 'calculator' && (
+              <ProfessionalCard variant="default">
+                <ProfessionalCardHeader subtitle="Calculate all import taxes and duties">
+                  Comprehensive Duty Calculator
+                </ProfessionalCardHeader>
+                <ProfessionalCardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="label">HS Code</label>
+                        <input
+                          type="text"
+                          value={calculationData.hs_code}
+                          onChange={(e) => setCalculationData(prev => ({ ...prev, hs_code: e.target.value }))}
+                          placeholder="e.g., 8471.30.00 or 8471300000"
+                          className="input w-full"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Enter 8-10 digit HS code (dots optional)</p>
+                      </div>
+                      
+                      <div>
+                        <label className="label">Value (AUD)</label>
+                        <input
+                          type="number"
+                          value={calculationData.customs_value}
+                          onChange={(e) => setCalculationData(prev => ({ ...prev, customs_value: Number(e.target.value) }))}
+                          placeholder="0.00"
+                          className="input w-full"
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="label">Country of Origin</label>
+                        <select
+                          value={calculationData.country_code}
+                          onChange={(e) => setCalculationData(prev => ({ ...prev, country_code: e.target.value }))}
+                          className="input w-full"
+                        >
+                          <option value="CN">China</option>
+                          <option value="US">United States</option>
+                          <option value="DE">Germany</option>
+                          <option value="JP">Japan</option>
+                          <option value="GB">United Kingdom</option>
+                          <option value="KR">South Korea</option>
+                          <option value="TH">Thailand</option>
+                          <option value="VN">Vietnam</option>
+                          <option value="MY">Malaysia</option>
+                          <option value="SG">Singapore</option>
+                        </select>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="label">Quantity</label>
+                          <input
+                            type="number"
+                            value={calculationData.quantity}
+                            onChange={(e) => setCalculationData(prev => ({ ...prev, quantity: Number(e.target.value) }))}
+                            className="input w-full"
+                            min="1"
+                          />
+                        </div>
+                        <div>
+                          <label className="label">Currency</label>
+                          <select
+                            value={calculationData.currency}
+                            onChange={(e) => setCalculationData(prev => ({ ...prev, currency: e.target.value }))}
+                            className="input w-full"
+                          >
+                            <option value="AUD">AUD</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={handleCalculation}
+                        className="btn btn--primary w-full"
+                        disabled={isLoading || !calculationData.hs_code || !calculationData.customs_value}
+                      >
+                        {isLoading ? (
+                          <>
+                            <FiLoader className="w-4 h-4 animate-spin" />
+                            Calculating...
+                          </>
+                        ) : (
+                          <>
+                            <FiHash className="w-4 h-4" />
+                            Calculate Duties
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    
+                    {calculationResult && (
+                      <div className="space-y-4">
+                        <h4 className="font-semibold text-gray-900">Calculation Results</h4>
+                        <div className="space-y-3">
+                          <KPICard
+                            icon={FiHash}
+                            label="Customs Duty"
+                            value={`$${parseFloat(String(calculationResult.total_duty || '0')).toFixed(2)}`}
+                            color="blue"
+                          />
+                          <KPICard
+                            icon={FiActivity}
+                            label="GST"
+                            value={`$${parseFloat(String(calculationResult.total_gst || '0')).toFixed(2)}`}
+                            color="green"
+                          />
+                          <KPICard
+                            icon={FiZap}
+                            label="Total Import Cost"
+                            value={`$${parseFloat(String(calculationResult.total_amount || '0')).toFixed(2)}`}
+                            color="indigo"
+                            className="border-blue-200 bg-blue-50"
+                          />
+                          {calculationResult.components && calculationResult.components.length > 0 && (
+                            <div className="mt-4">
+                              <h5 className="font-medium text-gray-900 mb-2">Duty Breakdown</h5>
+                              <div className="space-y-2">
+                                {calculationResult.components.map((component, index) => (
+                                  <div key={index} className="flex justify-between text-sm">
+                                    <span className="text-gray-600">{component.description}</span>
+                                    <span className="font-medium">${component.amount.toFixed(2)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {calculationResult.warnings && calculationResult.warnings.length > 0 && (
+                            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                              <h5 className="font-medium text-yellow-800 mb-1">Warnings</h5>
+                              <ul className="text-sm text-yellow-700 space-y-1">
+                                {calculationResult.warnings.map((warning, index) => (
+                                  <li key={index}>• {warning}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </ProfessionalCardContent>
+              </ProfessionalCard>
+            )}
+
+            {activeTab === 'tools' && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <ProfessionalCard variant="default">
+                    <ProfessionalCardHeader
+                      icon={<FiImage className="w-5 h-5 text-blue-500" />}
+                      subtitle="Upload product images for HS code suggestions"
+                    >
                       Image Classification
-                    </h3>
-                    <p className="card__subtitle">Upload product images for HS code suggestions</p>
-                  </div>
-                  <div className="card__body">
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <FiImage className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-600 mb-2">Drop image here or click to upload</p>
-                      <button className="btn btn--secondary btn--sm">
-                        Choose File
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                    </ProfessionalCardHeader>
+                    <ProfessionalCardContent>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        <FiImage className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-600 mb-2">Drop image here or click to upload</p>
+                        <button className="btn btn--secondary btn--sm">
+                          Choose File
+                        </button>
+                      </div>
+                    </ProfessionalCardContent>
+                  </ProfessionalCard>
 
-                <div className="card">
-                  <div className="card__header">
-                    <h3 className="card__title flex items-center gap-2">
-                      <FiFileText className="w-5 h-5 text-green-500" />
+                  <ProfessionalCard variant="default">
+                    <ProfessionalCardHeader
+                      icon={<FiFileText className="w-5 h-5 text-green-500" />}
+                      subtitle="Analyze invoices and shipping documents"
+                    >
                       Document Analysis
-                    </h3>
-                    <p className="card__subtitle">Analyze invoices and shipping documents</p>
-                  </div>
-                  <div className="card__body">
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <FiFileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-600 mb-2">Upload PDF or image documents</p>
-                      <button className="btn btn--secondary btn--sm">
-                        Choose File
+                    </ProfessionalCardHeader>
+                    <ProfessionalCardContent>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        <FiFileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-600 mb-2">Upload PDF or image documents</p>
+                        <button className="btn btn--secondary btn--sm">
+                          Choose File
+                        </button>
+                      </div>
+                    </ProfessionalCardContent>
+                  </ProfessionalCard>
+                </div>
+
+                <ProfessionalCard variant="default">
+                  <ProfessionalCardHeader>
+                    Quick Actions
+                  </ProfessionalCardHeader>
+                  <ProfessionalCardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <button className="btn btn--secondary justify-start">
+                        <FiSearch className="w-5 h-5" />
+                        <div className="text-left">
+                          <div className="font-medium">Find HS Code</div>
+                          <div className="text-xs opacity-75">Product classification</div>
+                        </div>
+                      </button>
+                      <button className="btn btn--secondary justify-start">
+                        <FiHash className="w-5 h-5" />
+                        <div className="text-left">
+                          <div className="font-medium">Calculate Duties</div>
+                          <div className="text-xs opacity-75">Import cost estimation</div>
+                        </div>
+                      </button>
+                      <button className="btn btn--secondary justify-start">
+                        <FiHelpCircle className="w-5 h-5" />
+                        <div className="text-left">
+                          <div className="font-medium">Ask Question</div>
+                          <div className="text-xs opacity-75">Customs guidance</div>
+                        </div>
                       </button>
                     </div>
-                  </div>
-                </div>
+                  </ProfessionalCardContent>
+                </ProfessionalCard>
               </div>
-
-              <div className="card">
-                <div className="card__header">
-                  <h3 className="card__title">Quick Actions</h3>
-                </div>
-                <div className="card__body">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button className="btn btn--secondary justify-start">
-                      <FiSearch className="w-5 h-5" />
-                      <div className="text-left">
-                        <div className="font-medium">Find HS Code</div>
-                        <div className="text-xs opacity-75">Product classification</div>
-                      </div>
-                    </button>
-                    <button className="btn btn--secondary justify-start">
-                      <FiHash className="w-5 h-5" />
-                      <div className="text-left">
-                        <div className="font-medium">Calculate Duties</div>
-                        <div className="text-xs opacity-75">Import cost estimation</div>
-                      </div>
-                    </button>
-                    <button className="btn btn--secondary justify-start">
-                      <FiHelpCircle className="w-5 h-5" />
-                      <div className="text-left">
-                        <div className="font-medium">Ask Question</div>
-                        <div className="text-xs opacity-75">Customs guidance</div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Quick Stats */}
-          <div className="card">
-            <div className="card__header">
-              <h3 className="card__title">Session Stats</h3>
-            </div>
-            <div className="card__body">
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Messages</span>
-                  <span className="font-medium">{messages.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Calculations</span>
-                  <span className="font-medium">
-                    {messages.filter(m => m.type === 'calculation').length}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Files Analyzed</span>
-                  <span className="font-medium">
-                    {messages.filter(m => m.type === 'document').length}
-                  </span>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
 
-          {/* Recent Calculations */}
-          <div className="card">
-            <div className="card__header">
-              <h3 className="card__title">Recent Calculations</h3>
-            </div>
-            <div className="card__body">
-              <div className="text-center py-6">
-                <FiClock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500">No recent calculations</p>
-              </div>
-            </div>
-          </div>
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Session Stats */}
+            <ProfessionalCard variant="default">
+              <ProfessionalCardHeader>
+                Session Stats
+              </ProfessionalCardHeader>
+              <ProfessionalCardContent>
+                <KPIGrid columns={1}>
+                  <KPICard
+                    icon={FiMessageSquare}
+                    label="Messages"
+                    value={sessionStats.messagesCount.toString()}
+                    color="blue"
+                  />
+                  <KPICard
+                    icon={FiHash}
+                    label="Calculations"
+                    value={sessionStats.calculationsCount.toString()}
+                    color="green"
+                  />
+                  <KPICard
+                    icon={FiFileText}
+                    label="Documents"
+                    value={sessionStats.documentsAnalyzed.toString()}
+                    color="purple"
+                  />
+                </KPIGrid>
+              </ProfessionalCardContent>
+            </ProfessionalCard>
 
-          {/* Saved Queries */}
-          <div className="card">
-            <div className="card__header">
-              <h3 className="card__title">Saved Queries</h3>
-            </div>
-            <div className="card__body">
-              <div className="text-center py-6">
-                <FiBookmark className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500">No saved queries</p>
-              </div>
-            </div>
+            {/* Recent Calculations */}
+            {recentCalculations.length > 0 && (
+              <ProfessionalCard variant="default">
+                <ProfessionalCardHeader>
+                  Recent Calculations
+                </ProfessionalCardHeader>
+                <ProfessionalCardContent>
+                  <div className="space-y-3">
+                    {recentCalculations.slice(0, 3).map((calc, index) => (
+                      <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                        <div className="text-sm font-medium text-gray-900">
+                          ${calc.total_amount?.toFixed(2) || '0.00'}
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          Total import cost
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ProfessionalCardContent>
+              </ProfessionalCard>
+            )}
+
+            {/* Saved Queries */}
+            {savedQueries.length > 0 && (
+              <ProfessionalCard variant="default">
+                <ProfessionalCardHeader>
+                  Saved Queries
+                </ProfessionalCardHeader>
+                <ProfessionalCardContent>
+                  <div className="space-y-2">
+                    {savedQueries.slice(0, 5).map((query) => (
+                      <button
+                        key={query.id}
+                        onClick={() => setInputMessage(query.content)}
+                        className="w-full text-left p-2 text-sm text-gray-600 hover:bg-gray-50 rounded"
+                      >
+                        {query.content.slice(0, 50)}...
+                      </button>
+                    ))}
+                  </div>
+                </ProfessionalCardContent>
+              </ProfessionalCard>
+            )}
           </div>
         </div>
       </div>

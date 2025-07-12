@@ -75,7 +75,7 @@ class GstProvision(Base):
     __table_args__ = (
         # Composite indexes for performance
         Index("ix_gst_provisions_hs_code_active", "hs_code", "is_active"),
-        Index("ix_gst_provisions_value_threshold", "value_threshold"),
+        # Note: value_threshold index is already created by index=True in column definition
     )
     
     def __repr__(self) -> str:

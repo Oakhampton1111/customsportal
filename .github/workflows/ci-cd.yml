@@ -1,0 +1,290 @@
+name: 🚀 CI/CD Pipeline with Claude Self-Healing
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+env:
+  # Retry guard - prevents infinite loops
+  MAX_RETRY_ATTEMPTS: 3
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  # Quality Gate ① - Frontend TypeScript & Linting
+  frontend-quality:
+    name: 🎯 Quality Gate ① - Frontend TypeScript & Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📥 Install Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: 🔍 TypeScript Compilation Check
+        working-directory: frontend
+        run: npx tsc -b
+
+      - name: 🧹 ESLint Check
+        working-directory: frontend
+        run: npm run lint
+
+  # Quality Gate ② - Backend Code Quality
+  backend-quality:
+    name: 🎯 Quality Gate ② - Backend Code Quality & Tests
+    runs-on: ubuntu-latest
+    needs: frontend-quality
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install Dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 🔍 Code Formatting Check
+        working-directory: backend
+        run: |
+          pip install black
+          black --check .
+
+      - name: 🔍 Import Sorting Check
+        working-directory: backend
+        run: |
+          pip install isort
+          isort --check-only .
+
+      - name: 🔍 Type Checking
+        working-directory: backend
+        run: |
+          pip install mypy
+          mypy . --ignore-missing-imports
+
+      - name: 🧪 Run Tests with Coverage
+        working-directory: backend
+        run: pytest -v --cov=. --cov-report=term-missing
+
+  # Quality Gate ③ - Frontend Unit Tests
+  frontend-tests:
+    name: 🎯 Quality Gate ③ - Frontend Unit Tests
+    runs-on: ubuntu-latest
+    needs: backend-quality
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📥 Install Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: 🧪 Run Unit Tests
+        working-directory: frontend
+        run: npm run test:ci
+
+  # Quality Gate ④ - E2E Tests
+  e2e-tests:
+    name: 🎯 Quality Gate ④ - End-to-End Tests
+    runs-on: ubuntu-latest
+    needs: frontend-tests
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📥 Install Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: 📥 Install Playwright
+        working-directory: frontend
+        run: npx playwright install --with-deps
+
+      - name: 🧪 Run E2E Tests
+        working-directory: frontend
+        run: npm run test:e2e
+
+      - name: 📊 Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+
+  # Build & Deploy (only after ALL quality gates pass)
+  build-and-deploy:
+    name: 🚀 Build & Deploy
+    runs-on: ubuntu-latest
+    needs: [frontend-quality, backend-quality, frontend-tests, e2e-tests]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 🏗️ Build and Push Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/customs-broker-backend:latest
+            ${{ secrets.DOCKER_USERNAME }}/customs-broker-backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🏗️ Build and Push Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/customs-broker-frontend:latest
+            ${{ secrets.DOCKER_USERNAME }}/customs-broker-frontend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🚀 Deploy to Digital Ocean
+        env:
+          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          APP_NAME: customs-broker-portal
+        run: |
+          # Install doctl
+          curl -sL https://github.com/digitalocean/doctl/releases/download/v1.104.0/doctl-1.104.0-linux-amd64.tar.gz | tar -xzv
+          sudo mv doctl /usr/local/bin
+          
+          # Authenticate with Digital Ocean
+          doctl auth init --access-token $DIGITALOCEAN_ACCESS_TOKEN
+          
+          # Update the app with new images
+          doctl apps update $APP_NAME --spec - <<EOF
+          name: customs-broker-portal
+          services:
+          - name: backend
+            source_dir: /backend
+            github:
+              repo: ${{ github.repository }}
+              branch: main
+            run_command: python main.py
+            environment_slug: python
+            instance_count: 1
+            instance_size_slug: basic-xxs
+            envs:
+            - key: DATABASE_URL
+              value: \${db.DATABASE_URL}
+            - key: ENVIRONMENT
+              value: production
+            - key: ANTHROPIC_API_KEY
+              value: \${ANTHROPIC_API_KEY}
+              type: SECRET
+            - key: SECRET_KEY
+              value: \${SECRET_KEY}
+              type: SECRET
+            - key: CORS_ORIGINS
+              value: https://customs-broker-portal.ondigitalocean.app
+            health_check:
+              http_path: /health
+            http_port: 8000
+            routes:
+            - path: /api
+            - path: /docs
+            - path: /health
+          
+          - name: frontend
+            source_dir: /frontend
+            github:
+              repo: ${{ github.repository }}
+              branch: main
+            build_command: npm run build
+            run_command: npm run preview -- --host 0.0.0.0 --port \$PORT
+            environment_slug: node-js
+            instance_count: 1
+            instance_size_slug: basic-xxs
+            envs:
+            - key: VITE_API_URL
+              value: https://customs-broker-portal.ondigitalocean.app
+            http_port: 8080
+            routes:
+            - path: /
+          
+          databases:
+          - name: db
+            engine: PG
+            version: "15"
+            size: basic-xs
+            num_nodes: 1
+          EOF
+
+      - name: ⏳ Wait for Deployment
+        run: |
+          echo "⏳ Waiting for deployment to complete..."
+          sleep 60
+
+      - name: 🔍 Verify Deployment
+        run: |
+          echo "🔍 Verifying deployment health..."
+          # Wait a bit more for services to be ready
+          sleep 30
+          
+          # Check if the app is responding (replace with your actual domain)
+          if curl -f https://customs-broker-portal.ondigitalocean.app/health; then
+            echo "✅ Backend health check passed"
+          else
+            echo "❌ Backend health check failed"
+            exit 1
+          fi
+
+      - name: ✅ Deployment Success
+        run: |
+          echo "🎉 Deployment completed successfully!"
+          echo "📊 Quality Gates Summary:"
+          echo "  ✅ TypeScript & Linting"
+          echo "  ✅ Backend Code Quality & Tests"
+          echo "  ✅ Frontend Unit Tests"
+          echo "  ✅ End-to-End Tests"
+          echo "  ✅ Docker Build & Push"
+          echo "  ✅ Digital Ocean Deployment"
+          echo ""
+          echo "🌐 Application URL: https://customs-broker-portal.ondigitalocean.app"

@@ -132,6 +132,61 @@ from .search import (
     VerificationStatusUpdate,
 )
 
+# Document management schemas
+from .documents import (
+    DocumentBase,
+    DocumentCreate,
+    DocumentUpdate,
+    DocumentResponse,
+    DocumentSummary,
+    DocumentUploadResponse,
+    DocumentUploadError,
+    DocumentSearchParams,
+    DocumentSearchResult,
+    DocumentSearchResponse,
+    DocumentCategoryCreate,
+    DocumentCategoryResponse,
+    DocumentShareCreate,
+    DocumentShareResponse,
+    DocumentStats,
+    DocumentBulkOperation,
+    DocumentBulkOperationResponse,
+    DocumentListResponse,
+)
+
+# Reports and analytics schemas
+from .reports import (
+    ReportType,
+    ReportStatus,
+    ReportFormat,
+    ScheduleFrequency,
+    MetricType,
+    ReportBase,
+    ReportCreate,
+    ReportUpdate,
+    ReportResponse,
+    ReportSummary,
+    ReportTemplateBase,
+    ReportTemplateCreate,
+    ReportTemplateResponse,
+    ReportScheduleBase,
+    ReportScheduleCreate,
+    ReportScheduleResponse,
+    AnalyticsMetric,
+    DashboardAnalytics,
+    TradeVolumeAnalytics,
+    DutySavingsAnalytics,
+    ClassificationAccuracyAnalytics,
+    ReportSearchParams,
+    ReportExportRequest,
+    ReportExportResponse,
+    ReportListResponse,
+    ReportTemplateListResponse,
+    ReportScheduleListResponse,
+    ReportGenerationRequest,
+    ReportGenerationResponse,
+)
+
 # Complete API response schemas
 from .responses import (
     TariffSectionResponse,
@@ -237,6 +292,59 @@ SEARCH_SCHEMAS = [
     VerificationStatusUpdate,
 ]
 
+DOCUMENT_SCHEMAS = [
+    DocumentBase,
+    DocumentCreate,
+    DocumentUpdate,
+    DocumentResponse,
+    DocumentSummary,
+    DocumentUploadResponse,
+    DocumentUploadError,
+    DocumentSearchParams,
+    DocumentSearchResult,
+    DocumentSearchResponse,
+    DocumentCategoryCreate,
+    DocumentCategoryResponse,
+    DocumentShareCreate,
+    DocumentShareResponse,
+    DocumentStats,
+    DocumentBulkOperation,
+    DocumentBulkOperationResponse,
+    DocumentListResponse,
+]
+
+REPORT_SCHEMAS = [
+    ReportType,
+    ReportStatus,
+    ReportFormat,
+    ScheduleFrequency,
+    MetricType,
+    ReportBase,
+    ReportCreate,
+    ReportUpdate,
+    ReportResponse,
+    ReportSummary,
+    ReportTemplateBase,
+    ReportTemplateCreate,
+    ReportTemplateResponse,
+    ReportScheduleBase,
+    ReportScheduleCreate,
+    ReportScheduleResponse,
+    AnalyticsMetric,
+    DashboardAnalytics,
+    TradeVolumeAnalytics,
+    DutySavingsAnalytics,
+    ClassificationAccuracyAnalytics,
+    ReportSearchParams,
+    ReportExportRequest,
+    ReportExportResponse,
+    ReportListResponse,
+    ReportTemplateListResponse,
+    ReportScheduleListResponse,
+    ReportGenerationRequest,
+    ReportGenerationResponse,
+]
+
 API_RESPONSE_SCHEMAS = [
     TariffSectionResponse,
     TariffChapterResponse,
@@ -277,6 +385,8 @@ ALL_SCHEMAS = (
     DUTY_CALCULATOR_SCHEMAS +
     FTA_SCHEMAS +
     SEARCH_SCHEMAS +
+    DOCUMENT_SCHEMAS +
+    REPORT_SCHEMAS +
     API_RESPONSE_SCHEMAS
 )
 
@@ -516,9 +626,60 @@ __all__ = [
     "ClassificationStatistics",
     "VerificationStatusUpdate",
     
+    # Document management schemas
+    "DocumentBase",
+    "DocumentCreate",
+    "DocumentUpdate",
+    "DocumentResponse",
+    "DocumentSummary",
+    "DocumentUploadResponse",
+    "DocumentUploadError",
+    "DocumentSearchParams",
+    "DocumentSearchResult",
+    "DocumentSearchResponse",
+    "DocumentCategoryCreate",
+    "DocumentCategoryResponse",
+    "DocumentShareCreate",
+    "DocumentShareResponse",
+    "DocumentStats",
+    "DocumentBulkOperation",
+    "DocumentBulkOperationResponse",
+    "DocumentListResponse",
+    
+    # Reports and analytics schemas
+    "ReportType",
+    "ReportStatus",
+    "ReportFormat",
+    "ScheduleFrequency",
+    "MetricType",
+    "ReportBase",
+    "ReportCreate",
+    "ReportUpdate",
+    "ReportResponse",
+    "ReportSummary",
+    "ReportTemplateBase",
+    "ReportTemplateCreate",
+    "ReportTemplateResponse",
+    "ReportScheduleBase",
+    "ReportScheduleCreate",
+    "ReportScheduleResponse",
+    "AnalyticsMetric",
+    "DashboardAnalytics",
+    "TradeVolumeAnalytics",
+    "DutySavingsAnalytics",
+    "ClassificationAccuracyAnalytics",
+    "ReportSearchParams",
+    "ReportExportRequest",
+    "ReportExportResponse",
+    "ReportListResponse",
+    "ReportTemplateListResponse",
+    "ReportScheduleListResponse",
+    "ReportGenerationRequest",
+    "ReportGenerationResponse",
+    
     # API response schemas
     "TariffSectionResponse",
-    "TariffChapterResponse", 
+    "TariffChapterResponse",
     "APITariffDetailResponse",
     "APITariffTreeResponse",
     "TariffSectionListResponse",
@@ -535,6 +696,8 @@ __all__ = [
     "DUTY_CALCULATOR_SCHEMAS",
     "FTA_SCHEMAS",
     "SEARCH_SCHEMAS",
+    "DOCUMENT_SCHEMAS",
+    "REPORT_SCHEMAS",
     "API_RESPONSE_SCHEMAS",
     "COMMON_SCHEMAS",
     "VALIDATOR_CLASSES",

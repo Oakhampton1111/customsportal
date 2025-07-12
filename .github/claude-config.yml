@@ -1,0 +1,294 @@
+# 🤖 Claude Auto-Fix Master Configuration - Customs Broker Portal
+
+# Project Information
+project:
+  name: "Customs Broker Portal"
+  type: "reference-portal"
+  description: "Live library and research tool for import/export regulations and tariff insights"
+  tech_stack:
+    frontend: "React TypeScript with Vite"
+    backend: "Python FastAPI"
+    database: "PostgreSQL"
+    deployment: "Docker"
+  
+  # Business Domain
+  domain: "customs-reference-library"
+  purpose: "Synthesized insights for customs brokers - tariff research, duty calculations, and regulatory reference"
+  compliance_requirements:
+    - "Customs Regulations Accuracy"
+    - "Trade Data Integrity"
+    - "Tariff Classification Standards"
+    - "Government Data Compliance"
+
+# Claude Behavior Configuration
+claude_settings:
+  # Fix Scope - What Claude should focus on
+  primary_focus:
+    - "typescript_errors"
+    - "import_issues"
+    - "linting_warnings"
+    - "test_failures"
+    - "python_formatting"
+    - "fastapi_route_issues"
+  
+  # Secondary fixes (only if primary issues are resolved)
+  secondary_focus:
+    - "code_formatting"
+    - "unused_imports"
+    - "console_warnings"
+    - "type_annotations"
+  
+  # What Claude should NEVER touch
+  forbidden_areas:
+    - "tariff_calculation_algorithms"
+    - "duty_rate_formulas"
+    - "hs_code_classification_logic"
+    - "fta_rate_calculations"
+    - "tco_duty_calculations"
+    - "gst_calculation_formulas"
+    - "schedule3_tariff_data"
+    - "export_tariff_data"
+    - "government_data_sync"
+    - "database_migrations"
+    - "environment_configs"
+    - "security_certificates"
+
+# Quality Gates Configuration
+quality_gates:
+  gate_1:
+    name: "Frontend TypeScript & Linting"
+    commands:
+      - "npx tsc -b"
+      - "npm run lint"
+    working_directory: "frontend"
+    timeout_minutes: 10
+    
+  gate_2:
+    name: "Backend Code Quality & Tests"
+    commands:
+      - "black --check ."
+      - "isort --check-only ."
+      - "mypy . --ignore-missing-imports"
+      - "pytest -v --cov=. --cov-report=term-missing"
+    working_directory: "backend"
+    timeout_minutes: 15
+    
+  gate_3:
+    name: "Frontend Unit Tests"
+    commands:
+      - "npm run test:ci"
+    working_directory: "frontend"
+    timeout_minutes: 10
+    
+  gate_4:
+    name: "End-to-End Tests"
+    commands:
+      - "npm run test:e2e"
+    working_directory: "frontend"
+    timeout_minutes: 20
+
+# Business Context Priority
+business_context:
+  # Order of importance for Claude to consider
+  priority_order:
+    1: "claude-constraints.md"      # Critical limitations first
+    2: "claude-business-rules.md"   # Business logic preservation
+    3: "claude-api-contracts.md"    # API compatibility
+    4: "claude-ux-context.md"       # User experience guidelines
+    5: "claude-config.yml"          # This configuration file
+
+  # Context weighting (how much to emphasize each area)
+  weights:
+    customs_compliance: 100    # Maximum priority
+    trade_regulations: 100     # Maximum priority
+    financial_accuracy: 95     # Nearly maximum priority
+    data_integrity: 95         # Nearly maximum priority
+    business_logic: 90         # Very high priority
+    api_compatibility: 85      # High priority
+    user_experience: 80        # High priority
+    code_quality: 70           # Medium-high priority
+    performance: 60            # Medium priority
+    documentation: 40          # Lower priority
+
+# Fix Strategy Configuration
+fix_strategy:
+  # Approach to fixing issues
+  methodology: "ultra_conservative"  # ultra_conservative for customs compliance
+  
+  # Ultra conservative approach settings
+  ultra_conservative:
+    prefer_minimal_changes: true
+    avoid_refactoring: true
+    preserve_existing_patterns: true
+    focus_on_syntax_fixes: true
+    never_modify_calculations: true
+    preserve_compliance_logic: true
+    
+  # What to do when uncertain
+  uncertainty_handling:
+    action: "create_issue_comment"
+    escalation_threshold: "low"  # Very low threshold for customs domain
+    
+  # Retry behavior
+  retry_policy:
+    max_attempts: 3
+    backoff_strategy: "exponential"
+    retry_on_failure_types:
+      - "compilation_errors"
+      - "linting_errors"
+      - "test_failures"
+      - "import_errors"
+
+# Technology-Specific Settings
+technology_config:
+  typescript:
+    strict_mode: true
+    target: "ES2020"
+    module: "ESNext"
+    preserve_imports: true
+    fix_missing_imports: true
+    
+  react:
+    version: "19"
+    hooks_rules: "strict"
+    prop_types: false  # Using TypeScript instead
+    
+  python:
+    version: "3.11"
+    formatter: "black"
+    import_sorter: "isort"
+    type_checker: "mypy"
+    
+  fastapi:
+    version: "0.104.1"
+    async_patterns: true
+    pydantic_v2: true
+    
+  testing:
+    frontend_framework: "Jest + React Testing Library"
+    backend_framework: "pytest"
+    e2e_framework: "Playwright"
+
+# Integration Settings
+integrations:
+  github:
+    auto_merge: false  # Require manual review for customs compliance
+    draft_prs: false   # Create regular PRs
+    pr_template: true  # Use PR template
+    
+  notifications:
+    slack_webhook: null  # Optional Slack integration
+    email_alerts: false  # Email notifications
+    
+  monitoring:
+    track_fix_success_rate: true
+    log_fix_attempts: true
+    performance_metrics: true
+
+# Security Settings
+security:
+  # Secrets that Claude should never expose or modify
+  protected_secrets:
+    - "DATABASE_PASSWORD"
+    - "JWT_SECRET"
+    - "API_KEYS"
+    - "ENCRYPTION_KEYS"
+    - "CUSTOMS_API_KEYS"
+    - "TRADE_DATA_TOKENS"
+    
+  # Security-sensitive files
+  protected_files:
+    - "*.key"
+    - "*.pem"
+    - "*.p12"
+    - ".env*"
+    - "secrets.yml"
+    - "customs_credentials.json"
+    
+  # Security checks to preserve
+  security_validations:
+    - "input_sanitization"
+    - "sql_injection_prevention"
+    - "xss_protection"
+    - "csrf_protection"
+    - "rate_limiting"
+    - "customs_data_encryption"
+
+# Performance Settings
+performance:
+  # Performance-critical code that should not be modified
+  critical_paths:
+    - "tariff_lookup_queries"
+    - "duty_calculation_engine"
+    - "classification_algorithms"
+    - "trade_data_processing"
+    - "compliance_validation"
+    
+  # Performance thresholds to maintain
+  thresholds:
+    api_response_time: "2000ms"
+    page_load_time: "3000ms"
+    test_execution_time: "300000ms"  # 5 minutes
+    
+  # Optimization preferences
+  optimization:
+    prefer_readability: true
+    avoid_premature_optimization: true
+    maintain_existing_patterns: true
+
+# Custom Rules (Customs Reference Portal Specific)
+custom_rules:
+  - name: "Preserve tariff classification algorithms"
+    description: "Never modify HS code classification and lookup logic"
+    pattern: "classify|hs_code|tariff_code|schedule3"
+    action: "preserve"
+    
+  - name: "Maintain duty calculation accuracy"
+    description: "Keep all duty rate calculations and formulas intact"
+    pattern: "duty_rate|calculate_duty|tariff_rate|tco_rate"
+    action: "preserve"
+    
+  - name: "Preserve FTA and trade agreement logic"
+    description: "Don't modify FTA rate calculations and eligibility rules"
+    pattern: "fta_rate|trade_agreement|preference|origin_rule"
+    action: "preserve"
+    
+  - name: "Keep GST and tax calculations"
+    description: "Maintain GST, customs duty, and other tax calculations"
+    pattern: "gst_rate|tax_calculation|customs_duty"
+    action: "preserve"
+    
+  - name: "Preserve TCO duty calculations"
+    description: "Don't modify Tariff Concession Order calculations"
+    pattern: "tco|tariff_concession|duty_concession"
+    action: "preserve"
+    
+  - name: "Maintain government data integrity"
+    description: "Keep government tariff and regulatory data intact"
+    pattern: "government_data|official_rate|regulatory_data"
+    action: "preserve"
+
+# Reporting Settings
+reporting:
+  # What to include in fix reports
+  include_metrics: true
+  include_before_after: true
+  include_test_results: true
+  include_performance_impact: true
+  
+  # Report format
+  format: "markdown"
+  detail_level: "detailed"  # Detailed for compliance audit trail
+
+# Version and Compatibility
+version: "1.0.0"
+claude_action_version: "v0.0.21"
+last_updated: "2025-06-22"
+schema_version: "1.0"
+
+# Notes for Customization
+# 1. This configuration is specifically tailored for the Customs Broker Portal
+# 2. Ultra-conservative approach due to regulatory compliance requirements
+# 3. Never modify customs calculations, tariff logic, or compliance validations
+# 4. All changes must maintain audit trail and data integrity
+# 5. Multi-tenant data isolation is critical for client separation

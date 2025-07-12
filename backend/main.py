@@ -29,8 +29,21 @@ from routes.duty_calculator import router as duty_calculator_router
 from routes.news import router as news_router
 from routes.export import router as export_router
 from routes.rulings import router as rulings_router
+from routes.documents import router as documents_router
+from routes.reports import router as reports_router
+from routes.compliance import router as compliance_router
+from routes.customer_auth import router as customer_auth_router
+from routes.edi_routes import router as edi_router
+from routes.loa_routes import router as loa_router
+from routes.ai_document_processing import router as ai_document_processing_router
 # from routes.search import router as search_router  # Temporarily disabled due to AI dependency
 # from routes.ai import router as ai_router  # Temporarily disabled due to CFFI dependency issue
+
+# Import models to register them with SQLAlchemy
+import models.customer  # This ensures customer tables are created during init_database()
+import models.edi  # This ensures EDI tables are created during init_database()
+import models.digital_loa  # This ensures Digital LOA tables are created during init_database()
+import models.ai_document_processing  # This ensures AI document processing tables are created during init_database()
 
 # Configure structured logging
 def configure_logging():
@@ -293,9 +306,31 @@ def setup_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError):
         """Handle request validation errors."""
+        # Convert errors to JSON-serializable format
+        serializable_errors = []
+        for error in exc.errors():
+            serializable_error = {
+                "type": error.get("type"),
+                "loc": error.get("loc"),
+                "msg": error.get("msg"),
+                "input": error.get("input"),
+                "url": error.get("url")
+            }
+            # Handle ctx field which may contain non-serializable objects
+            if "ctx" in error:
+                ctx = error["ctx"]
+                if isinstance(ctx, dict):
+                    serializable_error["ctx"] = {
+                        k: str(v) if not isinstance(v, (str, int, float, bool, type(None))) else v
+                        for k, v in ctx.items()
+                    }
+                else:
+                    serializable_error["ctx"] = str(ctx)
+            serializable_errors.append(serializable_error)
+        
         logger.warning(
             "Validation error",
-            errors=exc.errors(),
+            errors=serializable_errors,
             url=str(request.url),
         )
         
@@ -306,7 +341,7 @@ def setup_exception_handlers(app: FastAPI) -> None:
                     "type": "validation_error",
                     "status_code": 422,
                     "message": "Request validation failed",
-                    "details": exc.errors(),
+                    "details": serializable_errors,
                     "timestamp": datetime.utcnow().isoformat(),
                 }
             },
@@ -379,6 +414,31 @@ def setup_routes(app: FastAPI) -> None:
                 "Advanced tariff search and filtering capabilities",
                 "Detailed duty calculation breakdowns and analysis",
                 "Best rate analysis with potential savings identification",
+                "Customer portal with SSO authentication (Google, Microsoft, LinkedIn, Facebook)",
+                "100-point ID verification system for Australian compliance",
+                "Customer shipment tracking and management",
+                "Digital letter of authority with certificate-based signing",
+                "Secure session management with JWT tokens",
+                "Comprehensive authentication logging and audit trails",
+                "EDI integration for job registration and customs declarations",
+                "EDIFACT/X12 message processing and validation",
+                "ABF Integrated Cargo System (ICS) integration",
+                "Real-time customs clearance status updates",
+                "Automated declaration submission and tracking",
+                "Digital Letter of Authority with cryptographic signatures",
+                "PDF generation with embedded digital signatures",
+                "Certificate-based document authentication",
+                "Public LOA verification system",
+                "Comprehensive audit trail for all LOA activities",
+                "Template-based LOA creation and management",
+                "AI-powered document processing with Claude 3.5 Sonnet",
+                "OCR text extraction from PDFs and images",
+                "Intelligent document type detection and classification",
+                "Automated field extraction from customs documents",
+                "Compliance analysis and risk assessment",
+                "HS code suggestions based on document content",
+                "Batch document processing capabilities",
+                "Manual review workflows for quality assurance",
             ],
             "tariff_endpoints": [
                 "/api/tariff/sections - Browse all tariff sections",
@@ -403,6 +463,63 @@ def setup_routes(app: FastAPI) -> None:
                 "/api/duty/breakdown - Detailed calculation breakdown with steps",
                 "/api/duty/fta-rates/{hs_code}/{country_code} - FTA preferential rates",
                 "/api/duty/tco-check/{hs_code} - TCO exemption verification",
+            ],
+            "customer_auth_endpoints": [
+                "/api/customer/register - Register new customer with email/password",
+                "/api/customer/login - Login with email/password",
+                "/api/customer/sso/{provider}/login - Initiate SSO login (Google, Microsoft, LinkedIn, Facebook)",
+                "/api/customer/sso/{provider}/callback - Handle SSO callback",
+                "/api/customer/refresh - Refresh access token",
+                "/api/customer/logout - Logout and invalidate session",
+                "/api/customer/me - Get current user profile",
+                "/api/customer/link-account/{provider} - Link additional SSO account",
+                "/api/customer/unlink-account/{provider} - Unlink SSO account",
+                "/api/customer/sessions - Get active sessions",
+                "/api/customer/sessions/{session_id} - Revoke specific session",
+                "/api/customer/auth-logs - Get authentication history",
+            ],
+            "edi_endpoints": [
+                "/api/edi/jobs/register - Register new customs clearance job",
+                "/api/edi/jobs - Get customer's jobs with filtering",
+                "/api/edi/jobs/{job_id} - Get comprehensive job status",
+                "/api/edi/declarations - Create and manage customs declarations",
+                "/api/edi/declarations/{declaration_id}/items - Add items to declarations",
+                "/api/edi/declarations/{declaration_id}/submit - Submit declaration to ABF",
+                "/api/edi/declarations/{declaration_id} - Get detailed declaration information",
+                "/api/edi/messages - Get EDI messages with filtering",
+                "/api/edi/messages/process - Process inbound EDI messages",
+            ],
+            "loa_endpoints": [
+                "/api/loa/create - Create new Digital Letter of Authority",
+                "/api/loa/list - List customer's LOAs with pagination",
+                "/api/loa/{loa_id} - Get specific LOA details",
+                "/api/loa/{loa_id}/sign - Digitally sign LOA",
+                "/api/loa/{loa_id}/revoke - Revoke active LOA",
+                "/api/loa/{loa_id}/download - Download signed PDF",
+                "/api/loa/verify - Verify LOA authenticity",
+                "/api/loa/stats/summary - Get LOA statistics",
+                "/api/loa/templates/default - Get default LOA template",
+                "/api/loa/public/verify/{loa_number} - Public verification endpoint",
+            ],
+            "ai_document_processing_endpoints": [
+                "/api/ai/documents/process - Process document with AI analysis",
+                "/api/ai/documents/batch-process - Process multiple documents in batch",
+                "/api/ai/documents/batch-status/{batch_id} - Get batch processing status",
+                "/api/ai/documents/status/{document_id} - Get document processing status",
+                "/api/ai/documents/reprocess/{document_id} - Reprocess document",
+                "/api/ai/documents/fields/correct - Correct extracted field values",
+                "/api/ai/documents/stats - Get processing statistics and metrics",
+                "/api/ai/documents/pending - Get documents requiring manual review",
+                "/api/ai/documents/{document_id}/mark-reviewed - Mark document as reviewed",
+                "/api/ai/documents/processing/{id} - Get detailed processing information",
+                "/api/ai/documents/processing/{id}/fields - Update extracted fields",
+                "/api/ai/documents/processing/{id}/approve - Approve processing",
+                "/api/ai/documents/processing/{id}/reject - Reject processing",
+                "/api/ai/documents/processing/{id}/reprocess - Reprocess document",
+                "/api/ai/customs/generate-entry - Generate customs entry from extracted data",
+                "/api/ai/hs-codes/validate - Validate HS codes and suggest alternatives",
+                "/api/ai/duties/calculate - Calculate duties for items",
+                "/api/ai/compliance/check - Check compliance for customs entry",
             ],
             "timestamp": datetime.utcnow().isoformat(),
         }
@@ -494,6 +611,34 @@ def setup_routes(app: FastAPI) -> None:
     app.include_router(export_router)
     logger.info("Export API routes included successfully")
     
+    # Add document routes
+    app.include_router(documents_router)
+    logger.info("Documents API routes included successfully")
+    
+    # Add reports routes
+    app.include_router(reports_router)
+    logger.info("Reports API routes included successfully")
+    
+    # Add compliance routes
+    app.include_router(compliance_router)
+    logger.info("Compliance API routes included successfully")
+    
+    # Add customer authentication routes
+    app.include_router(customer_auth_router)
+    logger.info("Customer Authentication API routes included successfully")
+    
+    # Add EDI routes
+    app.include_router(edi_router)
+    logger.info("EDI API routes included successfully")
+    
+    # Add Digital Letter of Authority routes
+    app.include_router(loa_router)
+    logger.info("Digital Letter of Authority API routes included successfully")
+    
+    # Add AI Document Processing routes
+    app.include_router(ai_document_processing_router)
+    logger.info("AI Document Processing API routes included successfully")
+    
     # Add search routes
     # app.include_router(search_router)  # Temporarily disabled due to AI dependency
     logger.info("Search API routes temporarily disabled")
@@ -527,7 +672,7 @@ def main():
     )
     
     uvicorn.run(
-        "backend.main:app",
+        "main:app",
         host=settings.host,
         port=settings.port,
         reload=settings.reload and is_development(),

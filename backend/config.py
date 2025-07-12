@@ -32,8 +32,8 @@ class Settings(BaseSettings):
     
     # Database settings
     database_url: str = Field(
-        default="postgresql+asyncpg://postgres:password@localhost:5432/customs_broker_portal",
-        description="PostgreSQL database URL with asyncpg driver"
+        default="sqlite+aiosqlite:///./customs_portal.db",
+        description="Database URL - SQLite for development, PostgreSQL for production"
     )
     database_pool_size: int = Field(default=20, description="Database connection pool size")
     database_max_overflow: int = Field(default=30, description="Database connection pool max overflow")

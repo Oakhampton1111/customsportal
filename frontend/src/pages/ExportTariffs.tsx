@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  FiSearch, 
-  FiChevronDown, 
-  FiChevronRight, 
-  FiGlobe, 
-  FiFileText, 
-  FiShield, 
+import {
+  FiSearch,
+  FiChevronDown,
+  FiChevronRight,
+  FiGlobe,
+  FiFileText,
+  FiShield,
   FiTrendingUp,
   FiRefreshCw,
   FiDownload,
@@ -18,15 +18,19 @@ import {
   FiFilter,
   FiExternalLink,
   FiStar,
-  FiEye
+  FiEye,
+  FiFolder,
+  FiPlus,
+  FiMinus
 } from 'react-icons/fi';
 import { FaFolderOpen, FaBookmark as FaBookmarkSolid } from 'react-icons/fa';
 import { exportApi, type AHECCNode, type ExportCodeDetails, type ExportRequirement, type MarketAccessInfo, type ExportStatistics } from '../services/exportApi';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/input';
-import { Badge } from '../components/ui/badge';
-import { ScrollArea } from '../components/ui/scroll-area';
+import { ProfessionalCard, ProfessionalCardHeader, ProfessionalCardContent } from '../components/ui/ProfessionalCard';
+import { ProfessionalTable } from '../components/ui/ProfessionalTable';
+import { ProfessionalFilters, SearchBar, QuickFilters } from '../components/ui/ProfessionalFilters';
+import { TabPanel, MasterDetail, Accordion } from '../components/ui/ProfessionalLayouts';
+import { ActionToolbar } from '../components/ui/ActionToolbar';
+import { KPICard, KPIGrid } from '../components/ui/KPICard';
 import { cn } from '../lib/utils';
 
 interface AHECCCode extends AHECCNode {
@@ -57,6 +61,17 @@ const ExportTariffs: React.FC = () => {
   // Enhanced state for modern features
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
   const [recentlyViewed, setRecentlyViewed] = useState<AHECCCode[]>([]);
+
+  // Professional component state
+  const [filterValues, setFilterValues] = useState<Record<string, any>>({});
+  const [showDetailView, setShowDetailView] = useState(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  });
+
 
   const countries = [
     'United States', 'United Kingdom', 'Japan', 'China', 'Singapore', 'New Zealand',
@@ -237,21 +252,19 @@ const ExportTariffs: React.FC = () => {
           onMouseLeave={() => setHoveredNode(null)}
         >
           {hasChildren && (
-            <Button
-              variant="ghost"
-              size="xs"
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 toggleNode(node.id);
               }}
-              className="p-1 hover:bg-blue-100"
+              className="p-1 hover:bg-blue-100 rounded transition-colors"
             >
               {isExpanded ? (
                 <FiChevronDown className="w-4 h-4 text-blue-600" />
               ) : (
                 <FiChevronRight className="w-4 h-4 text-gray-500" />
               )}
-            </Button>
+            </button>
           )}
           
           {!hasChildren && (
@@ -265,13 +278,13 @@ const ExportTariffs: React.FC = () => {
               <code className="text-sm font-mono font-semibold text-blue-700 bg-blue-50 px-2 py-1 rounded">
                 {node.code}
               </code>
-              <Badge variant="outline" className={cn("text-xs", getLevelColor(nodeLevel))}>
+              <span className={cn("px-2 py-1 text-xs border rounded", getLevelColor(nodeLevel))}>
                 {nodeLevel}
-              </Badge>
+              </span>
               {node.statistical_unit && (
-                <Badge variant="secondary" className="text-xs">
+                <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">
                   {node.statistical_unit}
-                </Badge>
+                </span>
               )}
             </div>
             <p className="text-sm text-gray-700 line-clamp-2 group-hover:text-gray-900 transition-colors">
@@ -288,34 +301,28 @@ const ExportTariffs: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              variant="ghost"
-              size="xs"
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 toggleBookmark(node.code);
               }}
-              className="p-1 hover:bg-yellow-100"
+              className="p-1 hover:bg-yellow-100 rounded transition-colors"
             >
               {isBookmarked ? (
                 <FaBookmarkSolid className="w-3 h-3 text-yellow-600" />
               ) : (
                 <FiBookmark className="w-3 h-3 text-gray-400" />
               )}
-            </Button>
-            <Button
-              variant="ghost"
-              size="xs"
-              className="p-1 hover:bg-blue-100"
-            >
+            </button>
+            <button className="p-1 hover:bg-blue-100 rounded transition-colors">
               <FiEye className="w-3 h-3 text-gray-400" />
-            </Button>
+            </button>
           </div>
         </div>
 
         {isExpanded && hasChildren && (
           <div className="mt-1 space-y-1 animate-in slide-in-from-top-2 duration-200">
-            {node.children.map(child => renderTreeNode(child, level + 1))}
+            {node.children.map(child => renderTreeNode(child as AHECCCode, level + 1))}
           </div>
         )}
       </div>
@@ -326,8 +333,8 @@ const ExportTariffs: React.FC = () => {
     <div className="space-y-6">
       {exportRequirements.length > 0 ? (
         exportRequirements.map((req, index) => (
-          <Card key={index} className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-            <div className="p-6">
+          <ProfessionalCard key={index} variant="default" density="normal" className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+            <ProfessionalCardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <FiShield className="w-5 h-5 text-blue-600" />
@@ -338,9 +345,9 @@ const ExportTariffs: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <Badge variant="outline" className={cn("text-xs", req.mandatory ? 'bg-red-100 text-red-800 border-red-200' : 'bg-yellow-100 text-yellow-800 border-yellow-200')}>
+                <span className={cn("text-xs px-2 py-1 rounded-full border", req.mandatory ? 'bg-red-100 text-red-800 border-red-200' : 'bg-yellow-100 text-yellow-800 border-yellow-200')}>
                   {req.mandatory ? 'Required' : 'Optional'}
-                </Badge>
+                </span>
               </div>
               
               <div className="space-y-4">
@@ -372,8 +379,8 @@ const ExportTariffs: React.FC = () => {
                   )}
                 </div>
               </div>
-            </div>
-          </Card>
+            </ProfessionalCardContent>
+          </ProfessionalCard>
         ))
       ) : (
         <div className="text-center py-8">
@@ -387,21 +394,21 @@ const ExportTariffs: React.FC = () => {
   const renderMarketAccessTab = () => (
     <div className="space-y-6">
       {marketAccessError && (
-        <Card className="bg-red-50 border border-red-200">
-          <div className="p-6">
+        <ProfessionalCard variant="alert" density="normal" className="bg-red-50 border border-red-200">
+          <ProfessionalCardContent className="p-6">
             <div className="flex items-center gap-2 text-red-700">
               <FiAlertCircle className="w-5 h-5" />
               <span>{marketAccessError}</span>
             </div>
-          </div>
-        </Card>
+          </ProfessionalCardContent>
+        </ProfessionalCard>
       )}
       
       {marketAccess ? (
         <>
           {/* Access Status Card */}
-          <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-            <div className="p-6">
+          <ProfessionalCard variant="default" density="normal" className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+            <ProfessionalCardContent className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <FiGlobe className="w-5 h-5 text-blue-600" />
                 Market Access Status
@@ -422,13 +429,13 @@ const ExportTariffs: React.FC = () => {
                   </div>
                 )}
               </div>
-            </div>
-          </Card>
+            </ProfessionalCardContent>
+          </ProfessionalCard>
 
           {/* Requirements Card */}
           {marketAccess.requirements && marketAccess.requirements.length > 0 && (
-            <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-              <div className="p-6">
+            <ProfessionalCard variant="default" density="normal" className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+              <ProfessionalCardContent className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900">Market Access Requirements</h3>
                 <ul className="space-y-2 mt-4">
                   {marketAccess.requirements.map((requirement: string, index: number) => (
@@ -438,14 +445,14 @@ const ExportTariffs: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-              </div>
-            </Card>
+              </ProfessionalCardContent>
+            </ProfessionalCard>
           )}
 
           {/* Restrictions Card */}
           {marketAccess.restrictions && marketAccess.restrictions.length > 0 && (
-            <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-              <div className="p-6">
+            <ProfessionalCard variant="default" density="normal" className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+              <ProfessionalCardContent className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900">Restrictions & Limitations</h3>
                 <ul className="space-y-2 mt-4">
                   {marketAccess.restrictions.map((restriction: string, index: number) => (
@@ -455,8 +462,8 @@ const ExportTariffs: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-              </div>
-            </Card>
+              </ProfessionalCardContent>
+            </ProfessionalCard>
           )}
         </>
       ) : (
@@ -474,62 +481,53 @@ const ExportTariffs: React.FC = () => {
         <>
           {/* Key Metrics Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-              <div className="p-6 text-center">
-                <div className="text-2xl font-bold text-blue-600">${exportStats.export_value?.toLocaleString() || 'N/A'}</div>
-                <div className="text-sm text-gray-600 mt-1">Export Value</div>
-              </div>
-            </Card>
+            <ProfessionalCard variant="kpi" density="normal" className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+              <ProfessionalCardContent className="p-6 text-center">
+                <div className="text-2xl font-bold text-blue-600">${exportStats.export_value_aud?.toLocaleString() || 'N/A'}</div>
+                <div className="text-sm text-gray-600 mt-1">Export Value (AUD)</div>
+              </ProfessionalCardContent>
+            </ProfessionalCard>
             
-            <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-              <div className="p-6 text-center">
-                <div className="text-2xl font-bold text-green-600">{exportStats.export_quantity?.toLocaleString() || 'N/A'}</div>
-                <div className="text-sm text-gray-600 mt-1">Export Quantity</div>
-              </div>
-            </Card>
+            <ProfessionalCard variant="kpi" density="normal" className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+              <ProfessionalCardContent className="p-6 text-center">
+                <div className="text-2xl font-bold text-green-600">{exportStats.export_volume?.toLocaleString() || 'N/A'}</div>
+                <div className="text-sm text-gray-600 mt-1">Export Volume</div>
+              </ProfessionalCardContent>
+            </ProfessionalCard>
             
-            <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-              <div className="p-6 text-center">
-                <div className="text-2xl font-bold text-purple-600">{exportStats.year || 'N/A'}</div>
-                <div className="text-sm text-gray-600 mt-1">Year</div>
-              </div>
-            </Card>
+            <ProfessionalCard variant="kpi" density="normal" className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+              <ProfessionalCardContent className="p-6 text-center">
+                <div className="text-2xl font-bold text-purple-600">{exportStats.year_on_year_change || 'N/A'}%</div>
+                <div className="text-sm text-gray-600 mt-1">YoY Change</div>
+              </ProfessionalCardContent>
+            </ProfessionalCard>
             
-            <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-              <div className="p-6 text-center">
+            <ProfessionalCard variant="kpi" density="normal" className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+              <ProfessionalCardContent className="p-6 text-center">
                 <div className="text-2xl font-bold text-orange-600">{exportStats.unit || 'N/A'}</div>
                 <div className="text-sm text-gray-600 mt-1">Unit</div>
-              </div>
-            </Card>
+              </ProfessionalCardContent>
+            </ProfessionalCard>
           </div>
 
           {/* Additional Statistics */}
-          {(exportStats.market_share || exportStats.growth_rate || exportStats.trade_balance) && (
-            <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900">Additional Trade Metrics</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                  {exportStats.market_share && (
-                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Market Share</span>
-                      <span className="text-sm font-semibold text-blue-700">{exportStats.market_share}%</span>
+          {exportStats.top_destinations && exportStats.top_destinations.length > 0 && (
+            <ProfessionalCard variant="default" density="normal" className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+              <ProfessionalCardContent className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900">Top Export Destinations</h3>
+                <div className="space-y-3 mt-4">
+                  {exportStats.top_destinations.map((dest, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">{dest.country}</span>
+                      <div className="text-right">
+                        <span className="text-sm font-semibold text-blue-700">${dest.value_aud.toLocaleString()}</span>
+                        <div className="text-xs text-gray-500">{dest.percentage}%</div>
+                      </div>
                     </div>
-                  )}
-                  {exportStats.growth_rate && (
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Growth Rate</span>
-                      <span className="text-sm font-semibold text-green-700">{exportStats.growth_rate}%</span>
-                    </div>
-                  )}
-                  {exportStats.trade_balance && (
-                    <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Trade Balance</span>
-                      <span className="text-sm font-semibold text-purple-700">${exportStats.trade_balance.toLocaleString()}</span>
-                    </div>
-                  )}
+                  ))}
                 </div>
-              </div>
-            </Card>
+              </ProfessionalCardContent>
+            </ProfessionalCard>
           )}
         </>
       ) : (
@@ -565,7 +563,7 @@ const ExportTariffs: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Enhanced Header */}
+      {/* Professional Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -581,43 +579,58 @@ const ExportTariffs: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm">
-                <FiRefreshCw className="w-4 h-4 mr-2" />
-                Refresh
-              </Button>
-              <Button variant="outline" size="sm">
-                <FiDownload className="w-4 h-4 mr-2" />
-                Export
-              </Button>
-            </div>
+            <ActionToolbar
+              actions={[
+                {
+                  id: 'refresh',
+                  label: 'Refresh',
+                  icon: <FiRefreshCw className="w-4 h-4" />,
+                  onClick: () => loadAHECCTree(),
+                  variant: 'default'
+                },
+                {
+                  id: 'export',
+                  label: 'Export Data',
+                  icon: <FiDownload className="w-4 h-4" />,
+                  onClick: () => console.log('Export functionality'),
+                  variant: 'default'
+                }
+              ]}
+              showSelectionInfo={false}
+              className="border-0 bg-transparent p-0"
+            />
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Enhanced Tree Navigation */}
-          <div className="lg:col-span-1">
-            <Card className="h-[calc(100vh-200px)] bg-white/90 backdrop-blur-sm border-0 shadow-xl">
+        <MasterDetail
+          masterList={
+            <ProfessionalCard variant="default" density="normal" className="h-[calc(100vh-200px)]">
               <div className="p-6 border-b border-gray-100">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-gray-900">AHECC Codes</h2>
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant={viewMode === 'tree' ? 'primary' : 'outline'}
-                      size="xs"
+                    <button
                       onClick={() => setViewMode('tree')}
+                      className={`px-3 py-1 text-xs rounded transition-colors ${
+                        viewMode === 'tree'
+                          ? 'bg-blue-600 text-white'
+                          : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
                     >
                       Tree
-                    </Button>
-                    <Button
-                      variant={viewMode === 'list' ? 'primary' : 'outline'}
-                      size="xs"
+                    </button>
+                    <button
                       onClick={() => setViewMode('list')}
+                      className={`px-3 py-1 text-xs rounded transition-colors ${
+                        viewMode === 'list'
+                          ? 'bg-blue-600 text-white'
+                          : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
                     >
                       List
-                    </Button>
+                    </button>
                   </div>
                 </div>
 
@@ -625,7 +638,7 @@ const ExportTariffs: React.FC = () => {
                 <div className="relative mb-4">
                   <div className="relative">
                     <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
+                    <input
                       type="text"
                       placeholder="Search AHECC codes..."
                       value={searchQuery}
@@ -633,21 +646,19 @@ const ExportTariffs: React.FC = () => {
                         setSearchQuery(e.target.value);
                         handleSearch(e.target.value);
                       }}
-                      className="pl-10 pr-10 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                      className="w-full pl-10 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors outline-none"
                     />
                     {searchQuery && (
-                      <Button
-                        variant="ghost"
-                        size="xs"
+                      <button
                         onClick={() => {
                           setSearchQuery('');
                           setSearchMode(false);
                           setSearchResults([]);
                         }}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1"
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded transition-colors"
                       >
                         <FiX className="w-4 h-4" />
-                      </Button>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -662,9 +673,9 @@ const ExportTariffs: React.FC = () => {
                         </h4>
                         <div className="flex flex-wrap gap-1">
                           {[...bookmarks].slice(0, 3).map(code => (
-                            <Badge key={code} variant="secondary" className="text-xs cursor-pointer hover:bg-yellow-100">
+                            <span key={code} className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded cursor-pointer hover:bg-yellow-100 transition-colors">
                               {code}
-                            </Badge>
+                            </span>
                           ))}
                         </div>
                       </div>
@@ -677,14 +688,13 @@ const ExportTariffs: React.FC = () => {
                         </h4>
                         <div className="flex flex-wrap gap-1">
                           {recentlyViewed.slice(0, 3).map(item => (
-                            <Badge 
-                              key={item.code} 
-                              variant="outline" 
-                              className="text-xs cursor-pointer hover:bg-blue-50"
+                            <span
+                              key={item.code}
+                              className="px-2 py-1 text-xs border border-gray-200 text-gray-700 rounded cursor-pointer hover:bg-blue-50 transition-colors"
                               onClick={() => handleCodeSelect(item)}
                             >
                               {item.code}
-                            </Badge>
+                            </span>
                           ))}
                         </div>
                       </div>
@@ -693,7 +703,7 @@ const ExportTariffs: React.FC = () => {
                 )}
               </div>
 
-              <ScrollArea className="flex-1">
+              <div className="flex-1 overflow-auto">
                 <div className="p-4">
                   {loading ? (
                     <div className="space-y-3">
@@ -726,16 +736,15 @@ const ExportTariffs: React.FC = () => {
                     </div>
                   )}
                 </div>
-              </ScrollArea>
-            </Card>
-          </div>
-
-          {/* Enhanced Details Panel */}
-          <div className="lg:col-span-2">
-            {selectedCode ? (
-              <div className="space-y-6">
-                {/* Code Details Header */}
-                <Card className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-xl">
+              </div>
+            </ProfessionalCard>
+          }
+          detailView={
+            <div>
+              {selectedCode ? (
+                <div className="space-y-6">
+                  {/* Code Details Header */}
+                  <ProfessionalCard variant="intelligence" className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-xl">
                   <div className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -743,13 +752,13 @@ const ExportTariffs: React.FC = () => {
                           <code className="text-lg font-mono font-bold bg-white/20 px-3 py-1 rounded-lg">
                             {selectedCode.code}
                           </code>
-                          <Badge className="bg-white/20 text-white border-white/30">
+                          <span className="px-2 py-1 text-xs bg-white/20 text-white border border-white/30 rounded">
                             {getCodeLevel(selectedCode.code)}
-                          </Badge>
+                          </span>
                           {selectedCode.statistical_unit && (
-                            <Badge className="bg-white/20 text-white border-white/30">
+                            <span className="px-2 py-1 text-xs bg-white/20 text-white border border-white/30 rounded">
                               {selectedCode.statistical_unit}
-                            </Badge>
+                            </span>
                           )}
                         </div>
                         <h2 className="text-xl font-semibold mb-2">{selectedCode.description}</h2>
@@ -760,24 +769,22 @@ const ExportTariffs: React.FC = () => {
                           </div>
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      <button
                         onClick={() => toggleBookmark(selectedCode.code)}
-                        className="text-white hover:bg-white/20"
+                        className="p-2 text-white hover:bg-white/20 rounded transition-colors"
                       >
                         {bookmarks.has(selectedCode.code) ? (
                           <FaBookmarkSolid className="w-5 h-5" />
                         ) : (
                           <FiBookmark className="w-5 h-5" />
                         )}
-                      </Button>
+                      </button>
                     </div>
                   </div>
-                </Card>
+                </ProfessionalCard>
 
                 {/* Country Selection */}
-                <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+                <ProfessionalCard variant="default" className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
                   <div className="p-6">
                     <div className="flex items-center gap-4">
                       <FiGlobe className="w-5 h-5 text-blue-600" />
@@ -798,11 +805,11 @@ const ExportTariffs: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                </Card>
+                </ProfessionalCard>
 
                 {/* Enhanced Tabs */}
                 {selectedCountry && (
-                  <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+                  <ProfessionalCard variant="default" className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
                     <div className="border-b border-gray-100">
                       <nav className="flex space-x-1 p-4">
                         {[
@@ -810,16 +817,18 @@ const ExportTariffs: React.FC = () => {
                           { id: 'market', label: 'Market Access', icon: FiGlobe },
                           { id: 'statistics', label: 'Statistics', icon: FiTrendingUp }
                         ].map(tab => (
-                          <Button
+                          <button
                             key={tab.id}
-                            variant={activeTab === tab.id ? 'primary' : 'ghost'}
-                            size="sm"
                             onClick={() => setActiveTab(tab.id)}
-                            className="flex items-center gap-2"
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                              activeTab === tab.id
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                            }`}
                           >
                             <tab.icon className="w-4 h-4" />
                             {tab.label}
-                          </Button>
+                          </button>
                         ))}
                       </nav>
                     </div>
@@ -838,11 +847,11 @@ const ExportTariffs: React.FC = () => {
                         </>
                       )}
                     </div>
-                  </Card>
+                  </ProfessionalCard>
                 )}
               </div>
             ) : (
-              <Card className="h-[500px] flex items-center justify-center bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+              <ProfessionalCard variant="default" className="h-[500px] flex items-center justify-center bg-white/90 backdrop-blur-sm border-0 shadow-lg">
                 <div className="text-center">
                   <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <FiGlobe className="w-10 h-10 text-blue-600" />
@@ -854,35 +863,24 @@ const ExportTariffs: React.FC = () => {
                     Choose a code from the tree to view export requirements, market access information, and trade statistics
                   </p>
                 </div>
-              </Card>
+              </ProfessionalCard>
             )}
-          </div>
-        </div>
+            </div>
+          }
+        />
       </div>
 
       {/* Enhanced Quick Actions */}
       <div className="fixed right-6 bottom-6 space-y-3">
-        <Button 
-          variant="primary" 
-          size="sm"
-          className="rounded-full shadow-lg hover:shadow-xl transition-shadow"
-        >
+        <button className="p-3 bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow hover:bg-blue-700">
           <FiBookmark className="w-5 h-5" />
-        </Button>
-        <Button 
-          variant="secondary" 
-          size="sm"
-          className="rounded-full shadow-lg hover:shadow-xl transition-shadow"
-        >
+        </button>
+        <button className="p-3 bg-gray-600 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow hover:bg-gray-700">
           <FiClock className="w-5 h-5" />
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm"
-          className="rounded-full shadow-lg hover:shadow-xl transition-shadow bg-white"
-        >
+        </button>
+        <button className="p-3 bg-white text-gray-600 border border-gray-300 rounded-full shadow-lg hover:shadow-xl transition-shadow hover:bg-gray-50">
           <FiFilter className="w-5 h-5" />
-        </Button>
+        </button>
       </div>
     </div>
   );

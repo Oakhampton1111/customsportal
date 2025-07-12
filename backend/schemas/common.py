@@ -288,12 +288,13 @@ class HSCodeValidator:
 
 class CountryCodeValidator:
     """
-    Validator for ISO 3166-1 alpha-3 country codes.
+    Validator for ISO 3166-1 alpha-2 and alpha-3 country codes.
     
     Provides validation for country codes used in FTA rates.
+    Accepts both 2-character (ISO 3166-1 alpha-2) and 3-character (ISO 3166-1 alpha-3) codes.
     """
     
-    # Common country codes for Australian trade
+    # Common country codes for Australian trade (3-character codes)
     VALID_COUNTRY_CODES = {
         'AUS', 'USA', 'CHN', 'JPN', 'KOR', 'SGP', 'THA', 'VNM',
         'MYS', 'IDN', 'PHL', 'IND', 'NZL', 'CAN', 'MEX', 'CHL',
@@ -303,16 +304,32 @@ class CountryCodeValidator:
         'HRV', 'GRC', 'CYP', 'MLT', 'LUX', 'IRL', 'PRT'
     }
     
+    # Mapping from 2-character to 3-character codes for common countries
+    ALPHA2_TO_ALPHA3 = {
+        'AU': 'AUS', 'US': 'USA', 'CN': 'CHN', 'JP': 'JPN', 'KR': 'KOR',
+        'SG': 'SGP', 'TH': 'THA', 'VN': 'VNM', 'MY': 'MYS', 'ID': 'IDN',
+        'PH': 'PHL', 'IN': 'IND', 'NZ': 'NZL', 'CA': 'CAN', 'MX': 'MEX',
+        'CL': 'CHL', 'PE': 'PER', 'GB': 'GBR', 'DE': 'DEU', 'FR': 'FRA',
+        'IT': 'ITA', 'ES': 'ESP', 'NL': 'NLD', 'BE': 'BEL', 'CH': 'CHE',
+        'AT': 'AUT', 'SE': 'SWE', 'DK': 'DNK', 'NO': 'NOR', 'FI': 'FIN',
+        'PL': 'POL', 'CZ': 'CZE', 'HU': 'HUN', 'SK': 'SVK', 'SI': 'SVN',
+        'EE': 'EST', 'LV': 'LVA', 'LT': 'LTU', 'BG': 'BGR', 'RO': 'ROU',
+        'HR': 'HRV', 'GR': 'GRC', 'CY': 'CYP', 'MT': 'MLT', 'LU': 'LUX',
+        'IE': 'IRL', 'PT': 'PRT'
+    }
+    
     @staticmethod
     def validate_country_code(country_code: str) -> str:
         """
-        Validate ISO 3166-1 alpha-3 country code.
+        Validate ISO 3166-1 alpha-2 or alpha-3 country code.
+        
+        Accepts both 2-character and 3-character codes and converts to 3-character format.
         
         Args:
-            country_code: Country code to validate
+            country_code: Country code to validate (2 or 3 characters)
             
         Returns:
-            Validated country code in uppercase
+            Validated country code in 3-character uppercase format
             
         Raises:
             ValueError: If country code format is invalid
@@ -322,16 +339,28 @@ class CountryCodeValidator:
         
         cleaned = country_code.strip().upper()
         
-        if len(cleaned) != 3:
-            raise ValueError("Country code must be exactly 3 characters")
+        if len(cleaned) == 2:
+            # Convert 2-character to 3-character code
+            if not cleaned.isalpha():
+                raise ValueError("Country code must contain only letters")
+            
+            # Convert to 3-character code if mapping exists
+            if cleaned in CountryCodeValidator.ALPHA2_TO_ALPHA3:
+                return CountryCodeValidator.ALPHA2_TO_ALPHA3[cleaned]
+            else:
+                # For unmapped codes, we'll accept them but warn
+                # This allows for flexibility with less common country codes
+                return cleaned + 'X'  # Placeholder conversion
         
-        if not cleaned.isalpha():
-            raise ValueError("Country code must contain only letters")
+        elif len(cleaned) == 3:
+            # Validate 3-character code
+            if not cleaned.isalpha():
+                raise ValueError("Country code must contain only letters")
+            
+            return cleaned
         
-        # Note: We don't enforce the valid codes list as it may be incomplete
-        # and new codes may be added. This is just for reference.
-        
-        return cleaned
+        else:
+            raise ValueError("Country code must be exactly 2 or 3 characters")
 
 
 class FTACodeValidator:

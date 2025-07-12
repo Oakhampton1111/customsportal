@@ -40,5 +40,21 @@ python-dateutil==2.8.2
 # JSON handling
 orjson==3.9.10
 
+# Digital signature and PDF generation
+cryptography==41.0.7
+reportlab==4.0.7
+PyPDF2==3.0.1
+pillow==10.1.0
+
+# Document processing and OCR
+pdf2image==1.16.3
+pytesseract==0.3.10
+opencv-python==4.8.1.78
+aiofiles==23.2.1
+
+# Background job processing
+celery==5.3.4
+redis==5.0.1
+
 # CORS middleware (included in FastAPI but explicit for clarity)
 # fastapi already includes starlette which provides CORS middleware
