@@ -222,7 +222,7 @@ export class AuthService {
       await portalApi.post('/auth/logout');
     } catch (error) {
       // Continue with logout even if server call fails
-      console.error('Logout API call failed:', error);
+      // Note: Error logged silently for production
     } finally {
       this.clearStoredAuth();
       portalApi.clearAuthToken();
