@@ -9,42 +9,49 @@ import asyncio
 import logging
 import time
 import uuid
-from datetime import datetime, date
-from typing import List, Optional, Dict, Any, Union
+from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional, Union
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, BackgroundTasks
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, func, text, desc
-from sqlalchemy.orm import selectinload, joinedload
-from sqlalchemy.exc import SQLAlchemyError
 import structlog
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
+from sqlalchemy import and_, desc, func, or_, select, text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload
 
-from database import get_async_session
 from ai.tariff_ai import TariffAIService
+from database import get_async_session
 from models.classification import ProductClassification
+from models.hierarchy import TariffChapter, TariffSection
 from models.tariff import TariffCode
-from models.hierarchy import TariffSection, TariffChapter
-from schemas.search import (
-    # Classification schemas
-    ProductClassificationRequest, ProductClassificationResponse,
-    BatchClassificationRequest, BatchClassificationResponse,
-    ClassificationFeedbackRequest, ClassificationFeedbackResponse,
-    
-    # Search schemas
-    ProductSearchRequest, ProductSearchResponse, ProductSearchResult,
-    TariffSearchRequest, TariffSearchResponse, TariffSearchResult,
-    SimilaritySearchRequest, SimilaritySearchResponse, SimilaritySearchResult,
-    
-    # Analytics schemas
-    ClassificationHistory, ClassificationStatistics,
-    
-    # Supporting schemas
-    ClassificationResult, SearchFilters, ClassificationFilters,
-    AdvancedSearchParams, VerificationStatus, ClassificationSource,
-    SearchSortBy
-)
 from schemas.common import PaginationMeta, PaginationParams, SuccessResponse
+from schemas.search import (
+    AdvancedSearchParams,
+    BatchClassificationRequest,
+    BatchClassificationResponse,
+    ClassificationFeedbackRequest,
+    ClassificationFeedbackResponse,
+    ClassificationFilters,
+    ClassificationHistory,
+    ClassificationResult,
+    ClassificationSource,
+    ClassificationStatistics,
+    ProductClassificationRequest,
+    ProductClassificationResponse,
+    ProductSearchRequest,
+    ProductSearchResponse,
+    ProductSearchResult,
+    SearchFilters,
+    SearchSortBy,
+    SimilaritySearchRequest,
+    SimilaritySearchResponse,
+    SimilaritySearchResult,
+    TariffSearchRequest,
+    TariffSearchResponse,
+    TariffSearchResult,
+    VerificationStatus,
+)
 
 # Configure structured logging
 logger = structlog.get_logger(__name__)
@@ -359,7 +366,7 @@ async def submit_classification_feedback(
         if request.verification_status == VerificationStatus.VERIFIED:
             classification.verified_by_broker = True
             if request.broker_id:
-                classification.broker_user_id = int(request.broker_id) if request.broker_id.isdigit() else None
+                classification.broker_user_id = int(request.broker_id) if request.broker_id and request.broker_id.isdigit() else None
         
         await db.commit()
         

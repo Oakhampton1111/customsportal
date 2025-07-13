@@ -7,7 +7,7 @@ session management, and database utilities for the FastAPI application.
 
 import asyncio
 import logging
-from typing import AsyncGenerator, Optional
+from typing import Any, AsyncGenerator, Optional
 from contextlib import asynccontextmanager
 
 from sqlalchemy import MetaData, event
@@ -291,7 +291,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
             raise
 
 
-async def execute_raw_sql(query: str, params: Optional[dict] = None) -> any:
+async def execute_raw_sql(query: str, params: Optional[dict] = None) -> Any:
     """
     Execute raw SQL query.
     
