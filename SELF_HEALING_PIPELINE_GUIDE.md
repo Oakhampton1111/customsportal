@@ -20,7 +20,6 @@ This project implements a sophisticated self-healing CI/CD pipeline that automat
 
 3. **Legacy Workflows** (Enhanced for compatibility)
    - `ci-cd.yml` - Original comprehensive pipeline
-   - `claude-auto-fix.yml` - Issue creation for manual review
    - `deploy-to-digital-ocean.yml` - Production deployment
 
 ## Quality Gates

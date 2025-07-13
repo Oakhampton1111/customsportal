@@ -1,4 +1,4 @@
-name: 🚀 CI/CD Pipeline with Claude Self-Healing
+name: 🚀 CI/CD Pipeline with Google Gemini Self-Healing
 
 on:
   push:
@@ -216,8 +216,8 @@ jobs:
               value: \${db.DATABASE_URL}
             - key: ENVIRONMENT
               value: production
-            - key: ANTHROPIC_API_KEY
-              value: \${ANTHROPIC_API_KEY}
+            - key: GEMINI_API_KEY
+              value: \${GEMINI_API_KEY}
               type: SECRET
             - key: SECRET_KEY
               value: \${SECRET_KEY}
