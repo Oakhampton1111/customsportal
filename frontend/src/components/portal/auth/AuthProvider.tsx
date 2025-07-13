@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           await authService.validateSession();
         }
       } catch (error) {
-        console.error('Session validation failed:', error);
+        // Session validation failed - handled silently
       } finally {
         setIsInitialized(true);
       }
@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await authService.login({ email, password, rememberMe });
       return response.success;
     } catch (error) {
-      console.error('Login failed:', error);
+      // Login failed - handled silently
       return false;
     }
   };
@@ -71,7 +71,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authService.logout();
     } catch (error) {
-      console.error('Logout failed:', error);
+      // Logout failed - handled silently
     }
   };
 
